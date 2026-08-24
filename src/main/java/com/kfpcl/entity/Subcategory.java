@@ -8,16 +8,19 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "categories")
+@Table(name = "subcategories")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Subcategory {
 
     @Id
     @Column(name = "id", nullable = false, unique = true, length = 64)
     private String id;
+
+    @Column(name = "category_id", nullable = false, length = 64)
+    private String categoryId;
 
     @Column(name = "name", nullable = false, length = 150)
     private String name;
