@@ -36,10 +36,7 @@ build/
 .DS_Store
 Thumbs.db
 
-### Application Secrets & Properties ###
-application.properties
-**/application.properties
-**/application-*.properties
+### Duplicate / Local directories ###
 kfpcl_backend/
 
 ### Uploaded Files ###
