@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "8d3e9112-9c12-4c28-9447-0e6d5e0a6d51",
-    "name": "KFPL B2B Marketplace - Buyer & RFQ Suite (No Auth)",
-    "description": "Complete Postman Collection covering all 23 endpoints for Buyer Experience & RFQ Module (No Token / No JWT required)",
+    "name": "KFPL B2B Marketplace - Buyer & RFQ Suite",
+    "description": "Complete Postman Collection covering all 23 endpoints for Buyer Experience & RFQ Module",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -33,6 +33,32 @@
     }
   ],
   "item": [
+    {
+      "name": "0. Authentication",
+      "item": [
+        {
+          "name": "Buyer Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@kfpcl.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "1. Catalog",
       "item": [
@@ -177,20 +203,6 @@
       "item": [
         {
           "name": "1. Create RFQ",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
-                  "    pm.collectionVariables.set('rfqId', jsonData.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -280,20 +292,6 @@
         },
         {
           "name": "4. Accept Quotation (Creates Order)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
-                  "    pm.collectionVariables.set('orderId', jsonData.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "url": {
