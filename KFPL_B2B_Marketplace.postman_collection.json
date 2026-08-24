@@ -1,0 +1,370 @@
+{
+  "info": {
+    "_postman_id": "8d3e9112-9c12-4c28-9447-0e6d5e0a6d51",
+    "name": "KFPL B2B Marketplace - Buyer & RFQ Suite (No Auth)",
+    "description": "Complete Postman Collection covering all 23 endpoints for Buyer Experience & RFQ Module (No Token / No JWT required)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "prod_1",
+      "type": "string"
+    },
+    {
+      "key": "rfqId",
+      "value": "rfq_1",
+      "type": "string"
+    },
+    {
+      "key": "quotationId",
+      "value": "quot_1",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "ord_1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Catalog",
+      "item": [
+        {
+          "name": "1. Active Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/categories?isActive=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "categories"],
+              "query": [{"key": "isActive", "value": "true"}]
+            }
+          }
+        },
+        {
+          "name": "2. Featured Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/products?featured=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "products"],
+              "query": [{"key": "featured", "value": "true"}]
+            }
+          }
+        },
+        {
+          "name": "3. Search & Filter Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/products?search=milk&categoryId=cat_dairy&minPrice=20&maxPrice=50&moqMax=100&gstVerified=true&verifiedSupplier=true&sortBy=price_low&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "products"],
+              "query": [
+                {"key": "search", "value": "milk"},
+                {"key": "categoryId", "value": "cat_dairy"},
+                {"key": "minPrice", "value": "20"},
+                {"key": "maxPrice", "value": "50"},
+                {"key": "moqMax", "value": "100"},
+                {"key": "gstVerified", "value": "true"},
+                {"key": "verifiedSupplier", "value": "true"},
+                {"key": "sortBy", "value": "price_low"},
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Product Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/catalog/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "catalog", "products", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Buyer Dashboard & Discovery",
+      "item": [
+        {
+          "name": "1. Buyer Home Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/home",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "home"]
+            }
+          }
+        },
+        {
+          "name": "2. Buyer Recommendations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/recommendations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "recommendations"]
+            }
+          }
+        },
+        {
+          "name": "3. Record Recently Viewed",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/products/{{productId}}/view",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "products", "{{productId}}", "view"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Wishlist",
+      "item": [
+        {
+          "name": "1. Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/wishlist/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "wishlist", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "2. List Wishlist",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/wishlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "wishlist"]
+            }
+          }
+        },
+        {
+          "name": "3. Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/wishlist/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "wishlist", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. RFQ Lifecycle",
+      "item": [
+        {
+          "name": "1. Create RFQ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('rfqId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"prod_1\",\n  \"productTitle\": \"Amul Taaza Toned Milk 1L\",\n  \"categoryId\": \"cat_dairy\",\n  \"quantity\": 500,\n  \"unit\": \"liter\",\n  \"targetPrice\": 26.50,\n  \"expectedDeliveryDate\": \"2026-09-15\",\n  \"description\": \"Need regular weekly supply for distribution\",\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs"]
+            }
+          }
+        },
+        {
+          "name": "2. List Buyer RFQs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs"]
+            }
+          }
+        },
+        {
+          "name": "3. RFQ Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Cancel RFQ",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Quotations",
+      "item": [
+        {
+          "name": "1. List Quotations for RFQ",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}/quotations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}", "quotations"]
+            }
+          }
+        },
+        {
+          "name": "2. Compare Quotations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}/quotations/compare",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}", "quotations", "compare"]
+            }
+          }
+        },
+        {
+          "name": "3. Reject Quotation",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}/quotations/{{quotationId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}", "quotations", "{{quotationId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "4. Accept Quotation (Creates Order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('orderId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/rfqs/{{rfqId}}/quotations/{{quotationId}}/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "rfqs", "{{rfqId}}", "quotations", "{{quotationId}}", "accept"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Orders",
+      "item": [
+        {
+          "name": "1. List Buyer Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/orders?status=ALL",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "orders"],
+              "query": [{"key": "status", "value": "ALL"}]
+            }
+          }
+        },
+        {
+          "name": "2. Buyer Order Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "orders", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "3. Track Buyer Order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/orders/{{orderId}}/tracking",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "orders", "{{orderId}}", "tracking"]
+            }
+          }
+        },
+        {
+          "name": "4. Confirm Order Delivery",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/orders/{{orderId}}/confirm-delivery",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "orders", "{{orderId}}", "confirm-delivery"]
+            }
+          }
+        },
+        {
+          "name": "5. Cancel Order",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/buyer/orders/{{orderId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "buyer", "orders", "{{orderId}}", "cancel"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
