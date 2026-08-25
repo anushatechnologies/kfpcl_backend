@@ -63,6 +63,14 @@ public class Product {
     @Builder.Default
     private Status status = Status.ACTIVE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_status", length = 30)
+    @Builder.Default
+    private ApprovalStatus approvalStatus = ApprovalStatus.APPROVED;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
     @Column(name = "sku", nullable = false, unique = true, length = 100)
     private String sku;
 
@@ -82,6 +90,12 @@ public class Product {
         INACTIVE,
         ARCHIVED,
         OUT_OF_STOCK
+    }
+
+    public enum ApprovalStatus {
+        PENDING,
+        APPROVED,
+        REJECTED
     }
 
     public boolean isActive() {

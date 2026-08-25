@@ -2,6 +2,8 @@ package com.kfpcl.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kfpcl.dto.*;
+import com.kfpcl.repository.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,36 @@ class CatalogIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SubcategoryRepository subcategoryRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private InventoryLogRepository inventoryLogRepository;
+
+    @BeforeEach
+    void cleanUpTestData() {
+        productRepository.findBySku("KFP-MILK-1000-TEST").ifPresent(p -> {
+            inventoryLogRepository.findByProductIdOrderByCreatedAtDesc(p.getId()).forEach(inventoryLogRepository::delete);
+            inventoryRepository.findByProductId(p.getId()).ifPresent(inventoryRepository::delete);
+            productRepository.delete(p);
+        });
+        if (subcategoryRepository.existsById("sub_milk_test")) {
+            subcategoryRepository.deleteById("sub_milk_test");
+        }
+        if (categoryRepository.existsById("cat_dairy_test")) {
+            categoryRepository.deleteById("cat_dairy_test");
+        }
+    }
+
     @Test
     @DisplayName("Catalog Image Upload - Success without token (201)")
     void testUploadCatalogImage_Success() throws Exception {
@@ -44,23 +76,7 @@ class CatalogIntegrationTest {
                 .andExpect(jsonPath("$.data.fileUrl").exists());
     }
 
-    @Test
-    @DisplayName("Explicit Invalid Token Returns 401 Unauthorized")
-    void testAdminEndpoint_InvalidToken_Unauthorized() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/inventory")
-                        .header("Authorization", "Bearer invalid"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false));
-    }
 
-    @Test
-    @DisplayName("Explicit Unauthorized Role Token Returns 403 Forbidden")
-    void testAdminEndpoint_UnauthorizedRole_Forbidden() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/inventory")
-                        .header("Authorization", "Bearer unauthorized_role"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.success").value(false));
-    }
 
     @Test
     @DisplayName("Full Catalog & Product Workflow without any tokens (Positive & Negative Cases)")

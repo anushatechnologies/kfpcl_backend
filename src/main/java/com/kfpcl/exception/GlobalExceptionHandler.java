@@ -110,6 +110,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("URL not found: /" + ex.getResourcePath() + ". Please ensure your URL starts with /api/v1/"));
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        String supported = ex.getSupportedHttpMethods() != null ? ex.getSupportedHttpMethods().toString() : "None";
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.error("HTTP method '" + ex.getMethod() + "' is not supported for this endpoint. Supported methods: " + supported));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         return ResponseEntity
