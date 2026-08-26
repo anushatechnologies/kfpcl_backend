@@ -40,13 +40,22 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
+        String resolvedCatId = null;
+        if (StringUtils.hasText(categoryId)) {
+            String trimmed = categoryId.trim();
+            resolvedCatId = categoryRepository.findById(trimmed)
+                    .or(() -> categoryRepository.findByNameIgnoreCase(trimmed))
+                    .map(Category::getId)
+                    .orElse(trimmed);
+        }
+
         Page<Subcategory> subcategoryPage;
 
-        if (StringUtils.hasText(categoryId) && StringUtils.hasText(status)) {
+        if (StringUtils.hasText(resolvedCatId) && StringUtils.hasText(status)) {
             Subcategory.Status subStatus = parseStatus(status);
-            subcategoryPage = subcategoryRepository.findByCategoryIdAndStatus(categoryId.trim(), subStatus, pageable);
-        } else if (StringUtils.hasText(categoryId)) {
-            subcategoryPage = subcategoryRepository.findByCategoryId(categoryId.trim(), pageable);
+            subcategoryPage = subcategoryRepository.findByCategoryIdAndStatus(resolvedCatId, subStatus, pageable);
+        } else if (StringUtils.hasText(resolvedCatId)) {
+            subcategoryPage = subcategoryRepository.findByCategoryId(resolvedCatId, pageable);
         } else if (StringUtils.hasText(status)) {
             Subcategory.Status subStatus = parseStatus(status);
             subcategoryPage = subcategoryRepository.findByStatus(subStatus, pageable);
@@ -69,11 +78,13 @@ public class SubcategoryServiceImpl implements SubcategoryService {
     public List<SubcategoryResponseDto> getSubcategoriesByCategoryId(String categoryId) {
         String catId = categoryId != null ? categoryId.trim() : "";
         Category category = categoryRepository.findById(catId)
+                .or(() -> categoryRepository.findByNameIgnoreCase(catId))
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
-        List<Subcategory> subcategories = subcategoryRepository.findByCategoryIdAndStatus(catId, Subcategory.Status.ACTIVE);
+        String resolvedCatId = category.getId();
+        List<Subcategory> subcategories = subcategoryRepository.findByCategoryIdAndStatus(resolvedCatId, Subcategory.Status.ACTIVE);
         if (subcategories.isEmpty()) {
-            subcategories = subcategoryRepository.findByCategoryId(catId).stream()
+            subcategories = subcategoryRepository.findByCategoryId(resolvedCatId).stream()
                     .filter(s -> s.getStatus() != Subcategory.Status.ARCHIVED)
                     .collect(Collectors.toList());
         }
@@ -98,8 +109,12 @@ public class SubcategoryServiceImpl implements SubcategoryService {
 
     @Override
     public SubcategoryResponseDto createSubcategory(SubcategoryCreateDto dto) {
-        Category category = categoryRepository.findById(dto.getCategoryId().trim())
+        String requestedCat = dto.getCategoryId().trim();
+        Category category = categoryRepository.findById(requestedCat)
+                .or(() -> categoryRepository.findByNameIgnoreCase(requestedCat))
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", dto.getCategoryId()));
+
+        String categoryId = category.getId();
 
         if (!category.isActive()) {
             throw new BusinessValidationException("Cannot create subcategory under an inactive or archived category: " + category.getName());
