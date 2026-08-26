@@ -1,18 +1,29 @@
 package com.kfpcl.service;
 
-import com.kfpcl.dto.BuyerOrderResponse;
-import com.kfpcl.dto.QuotationCompareResponse;
-import com.kfpcl.dto.QuotationResponse;
-
-import java.util.List;
+import com.kfpcl.dto.request.QuotationSubmitRequest;
+import com.kfpcl.dto.response.PageResponse;
+import com.kfpcl.dto.response.QuotationResponse;
+import com.kfpcl.entity.enums.QuotationStatus;
 
 public interface QuotationService {
 
-    List<QuotationResponse> getQuotationsForRfq(String rfqId);
+    /**
+     * Submits or updates a commercial quotation for an open RFQ.
+     */
+    QuotationResponse submitQuote(String sellerEmail, Long rfqId, QuotationSubmitRequest request);
 
-    QuotationCompareResponse compareQuotations(String rfqId);
+    /**
+     * Retrieves paginated list of quotations submitted by the authenticated seller.
+     */
+    PageResponse<QuotationResponse> getSellerQuotations(
+            String sellerEmail,
+            QuotationStatus status,
+            int page,
+            int size
+    );
 
-    QuotationResponse rejectQuotation(String rfqId, String quotationId);
-
-    BuyerOrderResponse acceptQuotation(String rfqId, String quotationId);
+    /**
+     * Retrieves a single quotation details by ID.
+     */
+    QuotationResponse getQuotationById(Long quoteId);
 }

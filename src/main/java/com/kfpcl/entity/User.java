@@ -1,45 +1,56 @@
 package com.kfpcl.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kfpcl.entity.enums.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
-@Data
-@Builder
+@Table(
+    name = "users",
+    indexes = {
+        @Index(name = "idx_users_email", columnList = "email", unique = true),
+        @Index(name = "idx_users_role", columnList = "role")
+    }
+)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
 
     @Id
-    @Column(name = "id", nullable = false, unique = true)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @JsonIgnore
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "full_name", nullable = false, length = 150)
+    private String fullName;
 
-    @Column(name = "phone")
-    private String phone;
+    @Column(name = "phone_number", length = 30)
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(nullable = false, length = 30)
     private Role role;
 
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

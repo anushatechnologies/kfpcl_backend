@@ -1,26 +1,27 @@
 package com.kfpcl.serviceImpl;
 
-import com.kfpcl.dto.CreateRfqRequest;
-import com.kfpcl.dto.RfqResponse;
+import com.kfpcl.dto.request.RfqCreateRequest;
+import com.kfpcl.dto.response.PageResponse;
+import com.kfpcl.dto.response.RfqResponse;
 import com.kfpcl.entity.Buyer;
 import com.kfpcl.entity.Category;
-import com.kfpcl.entity.Product;
 import com.kfpcl.entity.Rfq;
+import com.kfpcl.entity.enums.RFQStatus;
 import com.kfpcl.exception.ResourceNotFoundException;
-import com.kfpcl.exception.UnprocessableEntityException;
+import com.kfpcl.repository.BuyerRepository;
 import com.kfpcl.repository.CategoryRepository;
-import com.kfpcl.repository.ProductRepository;
-import com.kfpcl.repository.QuotationRepository;
 import com.kfpcl.repository.RfqRepository;
-import com.kfpcl.util.SecurityUtils;
 import com.kfpcl.service.RfqService;
-import com.kfpcl.service.SupplierNotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,102 +29,117 @@ import java.util.stream.Collectors;
 public class RfqServiceImpl implements RfqService {
 
     private final RfqRepository rfqRepository;
-    private final ProductRepository productRepository;
+    private final BuyerRepository buyerRepository;
     private final CategoryRepository categoryRepository;
-    private final QuotationRepository quotationRepository;
-    private final SupplierNotificationService supplierNotificationService;
-    private final SecurityUtils securityUtils;
 
     @Override
     @Transactional
-    public RfqResponse createRfq(CreateRfqRequest request) {
-        Buyer buyer = securityUtils.getCurrentBuyer();
-
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", request.getProductId()));
+    public RfqResponse createRfq(String buyerEmail, RfqCreateRequest request) {
+        Buyer buyer = buyerRepository.findByUserEmail(buyerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer profile not found for user: " + buyerEmail));
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getCategoryId()));
 
-        String productTitle = request.getProductTitle() != null && !request.getProductTitle().isBlank()
-                ? request.getProductTitle()
-                : product.getTitle();
+        if (Boolean.FALSE.equals(category.getIsActive())) {
+            throw new IllegalArgumentException("Selected category is inactive");
+        }
 
         Rfq rfq = Rfq.builder()
-                .id("rfq_" + UUID.randomUUID().toString().substring(0, 8))
                 .buyer(buyer)
-                .product(product)
-                .productTitle(productTitle)
                 .category(category)
+                .title(request.getTitle().trim())
+                .description(request.getDescription().trim())
                 .quantity(request.getQuantity())
-                .unit(request.getUnit())
-                .targetPrice(request.getTargetPrice())
+                .unit(request.getUnit().trim().toUpperCase())
+                .targetUnitPrice(request.getTargetUnitPrice())
+                .deliveryLocation(request.getDeliveryLocation().trim())
                 .expectedDeliveryDate(request.getExpectedDeliveryDate())
-                .description(request.getDescription())
-                .status(Rfq.Status.OPEN)
+                .paymentTerms(request.getPaymentTerms() != null ? request.getPaymentTerms().trim() : null)
+                .status(RFQStatus.OPEN)
+                .specifications(request.getSpecifications() != null ? request.getSpecifications() : new HashMap<>())
                 .build();
 
-        Rfq saved = rfqRepository.save(rfq);
-
-        // Notify eligible suppliers
-        supplierNotificationService.notifyEligibleSuppliers(saved);
-
-        return mapToRfqResponse(saved);
+        Rfq savedRfq = rfqRepository.save(rfq);
+        return mapToResponse(savedRfq);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<RfqResponse> getBuyerRfqs() {
-        Buyer buyer = securityUtils.getCurrentBuyer();
-        return rfqRepository.findByBuyerIdOrderByCreatedAtDesc(buyer.getId())
-                .stream()
-                .map(this::mapToRfqResponse)
+    public PageResponse<RfqResponse> getBuyerRfqs(String buyerEmail, RFQStatus status, int page, int size) {
+        Buyer buyer = buyerRepository.findByUserEmail(buyerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer profile not found for user: " + buyerEmail));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Rfq> rfqPage = (status != null)
+                ? rfqRepository.findByBuyerIdAndStatus(buyer.getId(), status, pageable)
+                : rfqRepository.findByBuyerId(buyer.getId(), pageable);
+
+        List<RfqResponse> mapped = rfqPage.getContent().stream()
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
+
+        return PageResponse.from(rfqPage, mapped);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public RfqResponse getBuyerRfqById(String rfqId) {
-        Buyer buyer = securityUtils.getCurrentBuyer();
+    public RfqResponse getBuyerRfqById(String buyerEmail, Long rfqId) {
+        Buyer buyer = buyerRepository.findByUserEmail(buyerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer profile not found for user: " + buyerEmail));
+
         Rfq rfq = rfqRepository.findByIdAndBuyerId(rfqId, buyer.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("RFQ", "id", rfqId));
 
-        return mapToRfqResponse(rfq);
+        return mapToResponse(rfq);
     }
 
     @Override
     @Transactional
-    public RfqResponse cancelRfq(String rfqId) {
-        Buyer buyer = securityUtils.getCurrentBuyer();
+    public RfqResponse cancelRfq(String buyerEmail, Long rfqId) {
+        Buyer buyer = buyerRepository.findByUserEmail(buyerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer profile not found for user: " + buyerEmail));
+
         Rfq rfq = rfqRepository.findByIdAndBuyerId(rfqId, buyer.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("RFQ", "id", rfqId));
 
-        if (rfq.getStatus() != Rfq.Status.OPEN && rfq.getStatus() != Rfq.Status.QUOTATIONS_RECEIVED) {
-            throw new UnprocessableEntityException("Cannot cancel RFQ in status: " + rfq.getStatus());
+        if (rfq.getStatus() != RFQStatus.OPEN) {
+            throw new IllegalStateException("Only OPEN RFQs can be cancelled. Current status: " + rfq.getStatus());
         }
 
-        rfq.setStatus(Rfq.Status.CANCELLED);
+        rfq.setStatus(RFQStatus.CANCELLED);
         Rfq updated = rfqRepository.save(rfq);
-        return mapToRfqResponse(updated);
+        return mapToResponse(updated);
     }
 
-    private RfqResponse mapToRfqResponse(Rfq rfq) {
-        int quotationsCount = quotationRepository.findByRfqIdOrderByQuotedPriceAsc(rfq.getId()).size();
+    private RfqResponse mapToResponse(Rfq rfq) {
+        if (rfq == null) {
+            return null;
+        }
+
+        Buyer buyer = rfq.getBuyer();
+        Category category = rfq.getCategory();
 
         return RfqResponse.builder()
                 .id(rfq.getId())
-                .buyerId(rfq.getBuyer() != null ? rfq.getBuyer().getId() : null)
-                .productId(rfq.getProduct() != null ? rfq.getProduct().getId() : null)
-                .productTitle(rfq.getProductTitle())
-                .categoryId(rfq.getCategory() != null ? rfq.getCategory().getId() : null)
-                .categoryName(rfq.getCategory() != null ? rfq.getCategory().getName() : null)
+                .buyerId(buyer != null ? buyer.getId() : null)
+                .buyerCompanyName(buyer != null ? buyer.getCompanyName() : null)
+                .buyerContactPerson(buyer != null ? buyer.getContactPerson() : null)
+                .buyerEmail(buyer != null && buyer.getUser() != null ? buyer.getUser().getEmail() : null)
+                .categoryId(category != null ? category.getId() : null)
+                .categoryName(category != null ? category.getName() : null)
+                .categorySlug(category != null ? category.getSlug() : null)
+                .title(rfq.getTitle())
+                .description(rfq.getDescription())
                 .quantity(rfq.getQuantity())
                 .unit(rfq.getUnit())
-                .targetPrice(rfq.getTargetPrice())
+                .targetUnitPrice(rfq.getTargetUnitPrice())
+                .deliveryLocation(rfq.getDeliveryLocation())
                 .expectedDeliveryDate(rfq.getExpectedDeliveryDate())
-                .description(rfq.getDescription())
-                .status(rfq.getStatus().name())
-                .quotationsCount(quotationsCount)
+                .paymentTerms(rfq.getPaymentTerms())
+                .status(rfq.getStatus())
+                .specifications(rfq.getSpecifications())
                 .createdAt(rfq.getCreatedAt())
                 .updatedAt(rfq.getUpdatedAt())
                 .build();
