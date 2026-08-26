@@ -53,7 +53,7 @@ public class AdminProductController {
         return ResponseEntity.ok(ApiResponse.success(product, "Admin product details retrieved successfully"));
     }
 
-    @PatchMapping("/{productId}")
+    @RequestMapping(value = "/{productId}", method = {RequestMethod.PATCH, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
             @PathVariable String productId,
             @RequestBody ProductUpdateDto dto) {

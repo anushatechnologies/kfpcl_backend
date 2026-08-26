@@ -4,6 +4,7 @@ import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.ProductCreateDto;
 import com.kfpcl.dto.ProductResponseDto;
 import com.kfpcl.dto.ProductUpdateDto;
+import com.kfpcl.dto.SellerProductCreateDto;
 
 public interface ProductService {
 
@@ -16,6 +17,10 @@ public interface ProductService {
     ProductResponseDto getAdminProductById(String productId);
 
     ProductResponseDto createProduct(ProductCreateDto dto);
+
+    ProductResponseDto submitSellerProduct(SellerProductCreateDto dto);
+
+    PageResponseDto<ProductResponseDto> getSellerProducts(String sellerId, String approvalStatus, int page, int size, String sortBy, String sortDir);
 
     ProductResponseDto updateProduct(String productId, ProductUpdateDto dto);
 

@@ -49,7 +49,7 @@ public class AdminBrandController {
         return ResponseEntity.ok(ApiResponse.success(brand, "Brand retrieved successfully"));
     }
 
-    @PatchMapping("/{brandId}")
+    @RequestMapping(value = "/{brandId}", method = {RequestMethod.PATCH, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<BrandResponseDto>> updateBrand(
             @PathVariable String brandId,
             @RequestBody BrandUpdateDto dto) {

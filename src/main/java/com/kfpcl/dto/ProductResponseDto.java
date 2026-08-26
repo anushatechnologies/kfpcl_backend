@@ -28,6 +28,10 @@ public class ProductResponseDto {
     private String unit;
     private Integer stockQuantity;
     private String status;
+    private String approvalStatus;
+    private String rejectionReason;
+    private String sellerId;
+    private String createdBy;
     private String sku;
     private Double discount;
     private LocalDateTime createdAt;

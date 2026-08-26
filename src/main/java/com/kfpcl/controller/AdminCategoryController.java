@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/admin/catalog/categories")
+@RequestMapping({"/api/v1/admin/catalog/categories", "/api/v1/catalog/categories", "/api/v1/admin/categories"})
 @RequiredArgsConstructor
 public class AdminCategoryController {
 
@@ -50,7 +50,7 @@ public class AdminCategoryController {
         return ResponseEntity.ok(ApiResponse.success(category, "Category details retrieved successfully"));
     }
 
-    @PatchMapping("/{categoryId}")
+    @RequestMapping(value = "/{categoryId}", method = {RequestMethod.PATCH, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<CategoryResponseDto>> updateCategory(
             @PathVariable String categoryId,
             @RequestBody CategoryUpdateDto dto) {

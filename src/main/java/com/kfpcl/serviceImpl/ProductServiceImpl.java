@@ -4,6 +4,7 @@ import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.ProductCreateDto;
 import com.kfpcl.dto.ProductResponseDto;
 import com.kfpcl.dto.ProductUpdateDto;
+import com.kfpcl.dto.SellerProductCreateDto;
 import com.kfpcl.entity.*;
 import com.kfpcl.exception.BusinessValidationException;
 import com.kfpcl.exception.DuplicateResourceException;
@@ -46,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("status"), Product.Status.ACTIVE));
+            predicates.add(cb.equal(root.get("approvalStatus"), Product.ApprovalStatus.APPROVED));
 
             if (StringUtils.hasText(search)) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
@@ -191,6 +193,8 @@ public class ProductServiceImpl implements ProductService {
                 .unit(dto.getUnit())
                 .stockQuantity(initialStock)
                 .status(status)
+                .approvalStatus(Product.ApprovalStatus.APPROVED)
+                .createdBy("ADMIN")
                 .sku(dto.getSku().trim())
                 .discount(calculatedDiscount)
                 .build();
@@ -223,12 +227,115 @@ public class ProductServiceImpl implements ProductService {
                 .previousQuantity(0)
                 .newQuantity(initialStock)
                 .reason("Initial stock setup upon product creation")
-                .adjustedBy("System / Admin")
+                .adjustedBy("Admin")
                 .build();
 
         inventoryLogRepository.save(log);
 
         return mapToDto(savedProduct, category.getName(), subcategory.getName());
+    }
+
+    @Override
+    public ProductResponseDto submitSellerProduct(SellerProductCreateDto dto) {
+        // 1. Validate Category & Subcategory relationship
+        Category category = categoryRepository.findById(dto.getCategoryId().trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", dto.getCategoryId()));
+
+        if (!category.isActive()) {
+            throw new BusinessValidationException("Cannot submit product under an inactive or archived category: " + category.getName());
+        }
+
+        Subcategory subcategory = subcategoryRepository.findById(dto.getSubcategoryId().trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Subcategory", "subcategoryId", dto.getSubcategoryId()));
+
+        if (!subcategory.getCategoryId().equals(category.getId())) {
+            throw new BusinessValidationException(String.format("Subcategory '%s' does not belong to Category '%s'", subcategory.getName(), category.getName()));
+        }
+
+        if (!subcategory.isActive()) {
+            throw new BusinessValidationException("Cannot submit product under an inactive or archived subcategory: " + subcategory.getName());
+        }
+
+        // 2. Validate SKU Uniqueness
+        if (productRepository.existsBySku(dto.getSku().trim())) {
+            throw new DuplicateResourceException("Product", "sku", dto.getSku());
+        }
+
+        // 3. Validate Price & MRP Rules
+        if (dto.getPrice() > dto.getMrp()) {
+            throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", dto.getPrice(), dto.getMrp()));
+        }
+
+        double calculatedDiscount = calculateDiscount(dto.getPrice(), dto.getMrp());
+
+        String productId = StringUtils.hasText(dto.getId())
+                ? dto.getId().trim()
+                : "prod_" + slugify(dto.getProductName()) + "_" + UUID.randomUUID().toString().substring(0, 6);
+
+        int initialStock = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
+
+        // Seller submitted products require admin approval (PENDING & INACTIVE)
+        Product product = Product.builder()
+                .id(productId)
+                .productName(dto.getProductName().trim())
+                .categoryId(category.getId())
+                .subcategoryId(subcategory.getId())
+                .brand(dto.getBrand())
+                .description(dto.getDescription())
+                .imageUrl(dto.getImageUrl())
+                .price(dto.getPrice())
+                .mrp(dto.getMrp())
+                .quantity(dto.getQuantity())
+                .unit(dto.getUnit())
+                .stockQuantity(initialStock)
+                .status(Product.Status.INACTIVE)
+                .approvalStatus(Product.ApprovalStatus.PENDING)
+                .sellerId(dto.getSellerId().trim())
+                .createdBy("SELLER")
+                .sku(dto.getSku().trim())
+                .discount(calculatedDiscount)
+                .build();
+
+        Product savedProduct = productRepository.save(product);
+
+        // Initialize Inventory in PENDING state
+        String inventoryId = "inv_" + UUID.randomUUID().toString().substring(0, 8);
+        Inventory inventory = Inventory.builder()
+                .id(inventoryId)
+                .productId(savedProduct.getId())
+                .sku(savedProduct.getSku())
+                .stockQuantity(initialStock)
+                .reservedQuantity(0)
+                .reorderLevel(10)
+                .status(Inventory.Status.OUT_OF_STOCK)
+                .build();
+        inventoryRepository.save(inventory);
+
+        return mapToDto(savedProduct, category.getName(), subcategory.getName());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<ProductResponseDto> getSellerProducts(String sellerId, String approvalStatus, int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Product> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (StringUtils.hasText(sellerId)) {
+                predicates.add(cb.equal(root.get("sellerId"), sellerId.trim()));
+            }
+            if (StringUtils.hasText(approvalStatus)) {
+                try {
+                    Product.ApprovalStatus appStatus = Product.ApprovalStatus.valueOf(approvalStatus.trim().toUpperCase());
+                    predicates.add(cb.equal(root.get("approvalStatus"), appStatus));
+                } catch (IllegalArgumentException ignored) {}
+            }
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+        return mapToPageResponse(productPage);
     }
 
     @Override
@@ -386,6 +493,10 @@ public class ProductServiceImpl implements ProductService {
                 .unit(product.getUnit())
                 .stockQuantity(product.getStockQuantity())
                 .status(product.getStatus() != null ? product.getStatus().name() : Product.Status.ACTIVE.name())
+                .approvalStatus(product.getApprovalStatus() != null ? product.getApprovalStatus().name() : Product.ApprovalStatus.APPROVED.name())
+                .rejectionReason(product.getRejectionReason())
+                .sellerId(product.getSellerId())
+                .createdBy(product.getCreatedBy() != null ? product.getCreatedBy() : "ADMIN")
                 .sku(product.getSku())
                 .discount(product.getDiscount())
                 .createdAt(product.getCreatedAt())

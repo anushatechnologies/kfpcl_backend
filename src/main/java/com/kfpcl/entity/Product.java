@@ -71,6 +71,13 @@ public class Product {
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
+    @Column(name = "seller_id", length = 64)
+    private String sellerId;
+
+    @Column(name = "created_by", length = 64)
+    @Builder.Default
+    private String createdBy = "ADMIN";
+
     @Column(name = "sku", nullable = false, unique = true, length = 100)
     private String sku;
 

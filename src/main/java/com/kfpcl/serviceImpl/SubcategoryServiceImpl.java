@@ -67,10 +67,17 @@ public class SubcategoryServiceImpl implements SubcategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<SubcategoryResponseDto> getSubcategoriesByCategoryId(String categoryId) {
-        Category category = categoryRepository.findById(categoryId)
+        String catId = categoryId != null ? categoryId.trim() : "";
+        Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
-        List<Subcategory> subcategories = subcategoryRepository.findByCategoryIdAndStatus(categoryId, Subcategory.Status.ACTIVE);
+        List<Subcategory> subcategories = subcategoryRepository.findByCategoryIdAndStatus(catId, Subcategory.Status.ACTIVE);
+        if (subcategories.isEmpty()) {
+            subcategories = subcategoryRepository.findByCategoryId(catId).stream()
+                    .filter(s -> s.getStatus() != Subcategory.Status.ARCHIVED)
+                    .collect(Collectors.toList());
+        }
+
         return subcategories.stream()
                 .map(sub -> mapToDto(sub, category.getName()))
                 .collect(Collectors.toList());

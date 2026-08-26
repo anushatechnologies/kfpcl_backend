@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/catalog")
+@RequestMapping({"/api/v1/admin/catalog", "/api/v1/catalog", "/api/v1/admin"})
 @RequiredArgsConstructor
 public class AdminSubcategoryController {
 
     private final SubcategoryService subcategoryService;
 
-    @GetMapping("/subcategories")
+    @GetMapping({"/subcategories", "/catalog/subcategories"})
     public ResponseEntity<ApiResponse<PageResponseDto<SubcategoryResponseDto>>> listSubcategories(
             @RequestParam(required = false) String categoryId,
             @RequestParam(required = false) String search,
@@ -35,7 +35,7 @@ public class AdminSubcategoryController {
         return ResponseEntity.ok(ApiResponse.success(subcategories, "Subcategories retrieved successfully"));
     }
 
-    @PostMapping("/subcategories")
+    @PostMapping({"/subcategories", "/catalog/subcategories"})
     public ResponseEntity<ApiResponse<SubcategoryResponseDto>> createSubcategory(
             @Valid @RequestBody SubcategoryCreateDto dto) {
 
@@ -45,7 +45,7 @@ public class AdminSubcategoryController {
                 .body(ApiResponse.success(created, "Subcategory created successfully"));
     }
 
-    @GetMapping("/categories/{categoryId}/subcategories")
+    @GetMapping({"/categories/{categoryId}/subcategories", "/catalog/categories/{categoryId}/subcategories", "/subcategories/category/{categoryId}"})
     public ResponseEntity<ApiResponse<List<SubcategoryResponseDto>>> listCategorySubcategories(
             @PathVariable String categoryId) {
 
@@ -53,7 +53,7 @@ public class AdminSubcategoryController {
         return ResponseEntity.ok(ApiResponse.success(subcategories, "Category subcategories retrieved successfully"));
     }
 
-    @GetMapping("/subcategories/{subcategoryId}")
+    @GetMapping({"/subcategories/{subcategoryId}", "/catalog/subcategories/{subcategoryId}"})
     public ResponseEntity<ApiResponse<SubcategoryResponseDto>> getSubcategory(
             @PathVariable String subcategoryId) {
 
@@ -61,7 +61,7 @@ public class AdminSubcategoryController {
         return ResponseEntity.ok(ApiResponse.success(subcategory, "Subcategory details retrieved successfully"));
     }
 
-    @PatchMapping("/subcategories/{subcategoryId}")
+    @RequestMapping(value = "/subcategories/{subcategoryId}", method = {RequestMethod.PATCH, RequestMethod.PUT})
     public ResponseEntity<ApiResponse<SubcategoryResponseDto>> updateSubcategory(
             @PathVariable String subcategoryId,
             @RequestBody SubcategoryUpdateDto dto) {
