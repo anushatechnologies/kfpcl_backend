@@ -1,30 +1,27 @@
 package com.kfpcl.repository;
 
 import com.kfpcl.entity.Order;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.kfpcl.entity.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface OrderRepository extends JpaRepository<Order, String>, JpaSpecificationExecutor<Order> {
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByBuyerId(String buyerId);
 
-    Optional<Order> findByOrderNumber(String orderNumber);
+    List<Order> findBySellerId(String sellerId);
 
-    Page<Order> findByOrderStatus(Order.OrderStatus orderStatus, Pageable pageable);
+    Optional<Order> findByIdempotencyKey(String idempotencyKey);
 
-    Page<Order> findByBuyerId(String buyerId, Pageable pageable);
+    List<Order> findByBuyerIdAndStatus(String buyerId, OrderStatus status);
 
-    Page<Order> findBySellerId(String sellerId, Pageable pageable);
+    List<Order> findBySellerIdAndStatus(String sellerId, OrderStatus status);
 
-    long countByOrderStatus(Order.OrderStatus orderStatus);
-
-    @Query("SELECT SUM(o.finalAmount) FROM Order o WHERE o.paymentStatus = 'PAID'")
-    Double sumTotalRevenue();
-
-    @Query("SELECT o.region, COUNT(o), SUM(o.finalAmount) FROM Order o GROUP BY o.region")
-    List<Object[]> findRegionStatistics();
+    @Query("SELECT COUNT(DISTINCT o.buyerId) FROM Order o WHERE o.sellerId = :sellerId GROUP BY o.buyerId HAVING COUNT(o.id) > 1")
+    List<Long> countRepeatBuyersBySellerId(@Param("sellerId") String sellerId);
 }
