@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping({"/api/v1/admin/catalog/categories", "/api/v1/catalog/categories", "/api/v1/admin/categories"})
+@RequestMapping({"/api/v1/admin/catalog/categories", "/api/v1/catalog/categories", "/api/v1/admin/categories", "/api/v1/categories"})
 @RequiredArgsConstructor
 public class AdminCategoryController {
 

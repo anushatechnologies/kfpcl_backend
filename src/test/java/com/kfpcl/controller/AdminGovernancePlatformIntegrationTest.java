@@ -214,10 +214,10 @@ class AdminGovernancePlatformIntegrationTest {
     @Test
     @DisplayName("Admin Orders - Lifecycle, Tracking and Export")
     void testAdminOrdersFlow() throws Exception {
-        String orderId = "ord_test_" + System.currentTimeMillis();
+        String orderId = "ord_test_" + System.currentTimeMillis() + "_" + java.util.UUID.randomUUID().toString().substring(0, 8);
         Order order = Order.builder()
                 .id(orderId)
-                .orderNumber("KFP-ORD-" + (System.currentTimeMillis() % 10000))
+                .orderNumber("KFP-ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 8))
                 .buyerId(buyerUser.getId())
                 .buyerName(buyerUser.getName())
                 .sellerId(sellerUser.getId())

@@ -120,7 +120,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
             throw new BusinessValidationException("Cannot create subcategory under an inactive or archived category: " + category.getName());
         }
 
-        if (subcategoryRepository.existsByCategoryIdAndNameIgnoreCase(dto.getCategoryId().trim(), dto.getName().trim())) {
+        if (subcategoryRepository.existsByCategoryIdAndNameIgnoreCase(categoryId, dto.getName().trim())) {
             throw new DuplicateResourceException(String.format("Subcategory '%s' already exists in category '%s'", dto.getName(), category.getName()));
         }
 
@@ -142,7 +142,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
 
         Subcategory subcategory = Subcategory.builder()
                 .id(subcategoryId)
-                .categoryId(dto.getCategoryId().trim())
+                .categoryId(categoryId)
                 .name(dto.getName().trim())
                 .imageUrl(dto.getImageUrl())
                 .description(dto.getDescription())
