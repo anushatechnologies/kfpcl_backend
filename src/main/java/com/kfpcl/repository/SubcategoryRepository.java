@@ -19,6 +19,10 @@ public interface SubcategoryRepository extends JpaRepository<Subcategory, String
 
     Page<Subcategory> findByStatus(Subcategory.Status status, Pageable pageable);
 
+    Page<Subcategory> findByStatusNot(Subcategory.Status status, Pageable pageable);
+
+    Page<Subcategory> findByCategoryIdAndStatusNot(String categoryId, Subcategory.Status status, Pageable pageable);
+
     boolean existsByCategoryIdAndNameIgnoreCase(String categoryId, String name);
 
     boolean existsByCategoryIdAndNameIgnoreCaseAndIdNot(String categoryId, String name, String id);

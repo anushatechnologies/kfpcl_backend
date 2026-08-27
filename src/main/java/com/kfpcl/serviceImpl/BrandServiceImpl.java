@@ -136,9 +136,8 @@ public class BrandServiceImpl implements BrandService {
         Brand brand = brandRepository.findById(brandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Brand", "brandId", brandId));
 
-        brand.setStatus(Brand.Status.ARCHIVED);
-        brandRepository.save(brand);
-        auditLogService.logAction("admin", "ROLE_ADMIN", "ARCHIVE_BRAND", "BRAND", brandId, null, "ARCHIVED", null, null);
+        brandRepository.delete(brand);
+        auditLogService.logAction("admin", "ROLE_ADMIN", "DELETE_BRAND", "BRAND", brandId, null, "DELETED", null, null);
     }
 
     private Brand.Status parseStatus(String status) {

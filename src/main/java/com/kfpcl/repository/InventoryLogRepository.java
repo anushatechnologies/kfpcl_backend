@@ -13,4 +13,8 @@ public interface InventoryLogRepository extends JpaRepository<InventoryLog, Stri
     Page<InventoryLog> findByInventoryIdOrderByCreatedAtDesc(String inventoryId, Pageable pageable);
 
     List<InventoryLog> findByProductIdOrderByCreatedAtDesc(String productId);
+
+    void deleteByProductId(String productId);
+
+    void deleteByInventoryId(String inventoryId);
 }

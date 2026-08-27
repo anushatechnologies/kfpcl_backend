@@ -22,4 +22,8 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     Page<Category> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Page<Category> findByNameContainingIgnoreCaseAndStatus(String name, Category.Status status, Pageable pageable);
+
+    Page<Category> findByStatusNot(Category.Status status, Pageable pageable);
+
+    Page<Category> findByNameContainingIgnoreCaseAndStatusNot(String name, Category.Status status, Pageable pageable);
 }

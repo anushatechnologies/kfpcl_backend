@@ -37,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     private final SubcategoryRepository subcategoryRepository;
     private final InventoryRepository inventoryRepository;
     private final InventoryLogRepository inventoryLogRepository;
+    private final ReviewRepository reviewRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -418,8 +419,18 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        product.setStatus(Product.Status.ARCHIVED);
-        productRepository.save(product);
+        // Clean up associated inventory and inventory logs
+        inventoryRepository.findByProductId(productId).ifPresent(inv -> {
+            inventoryLogRepository.deleteByInventoryId(inv.getId());
+            inventoryRepository.delete(inv);
+        });
+        inventoryLogRepository.deleteByProductId(productId);
+
+        // Clean up associated reviews
+        reviewRepository.deleteByProductId(productId);
+
+        // Delete product from database
+        productRepository.delete(product);
     }
 
     private double calculateDiscount(double price, double mrp) {

@@ -16,4 +16,6 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
     Page<Review> findByStatus(Review.Status status, Pageable pageable);
 
     boolean existsByProductIdAndUserId(String productId, String userId);
+
+    void deleteByProductId(String productId);
 }

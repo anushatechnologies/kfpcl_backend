@@ -17,4 +17,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, String> {
     Page<Inventory> findByStatus(Inventory.Status status, Pageable pageable);
 
     Page<Inventory> findBySkuContainingIgnoreCase(String sku, Pageable pageable);
+
+    void deleteByProductId(String productId);
 }

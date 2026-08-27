@@ -5,9 +5,14 @@ import com.kfpcl.dto.CategoryResponseDto;
 import com.kfpcl.dto.CategoryUpdateDto;
 import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.entity.Category;
+import com.kfpcl.entity.Product;
+import com.kfpcl.entity.Subcategory;
+import com.kfpcl.exception.BusinessValidationException;
 import com.kfpcl.exception.DuplicateResourceException;
 import com.kfpcl.exception.ResourceNotFoundException;
 import com.kfpcl.repository.CategoryRepository;
+import com.kfpcl.repository.ProductRepository;
+import com.kfpcl.repository.SubcategoryRepository;
 import com.kfpcl.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +33,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final SubcategoryRepository subcategoryRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -41,12 +48,12 @@ public class CategoryServiceImpl implements CategoryService {
             Category.Status catStatus = parseStatus(status);
             categoryPage = categoryRepository.findByNameContainingIgnoreCaseAndStatus(search.trim(), catStatus, pageable);
         } else if (StringUtils.hasText(search)) {
-            categoryPage = categoryRepository.findByNameContainingIgnoreCase(search.trim(), pageable);
+            categoryPage = categoryRepository.findByNameContainingIgnoreCaseAndStatusNot(search.trim(), Category.Status.ARCHIVED, pageable);
         } else if (StringUtils.hasText(status)) {
             Category.Status catStatus = parseStatus(status);
             categoryPage = categoryRepository.findByStatus(catStatus, pageable);
         } else {
-            categoryPage = categoryRepository.findAll(pageable);
+            categoryPage = categoryRepository.findByStatusNot(Category.Status.ARCHIVED, pageable);
         }
 
         List<CategoryResponseDto> dtoList = categoryPage.getContent().stream()
@@ -140,8 +147,17 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
-        category.setStatus(Category.Status.ARCHIVED);
-        categoryRepository.save(category);
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        if (!products.isEmpty()) {
+            throw new BusinessValidationException("Cannot delete category: " + products.size() + " product(s) are linked to it. Please reassign or delete the products first.");
+        }
+
+        List<Subcategory> subcategories = subcategoryRepository.findByCategoryId(categoryId);
+        if (!subcategories.isEmpty()) {
+            subcategoryRepository.deleteAll(subcategories);
+        }
+
+        categoryRepository.delete(category);
     }
 
     private Category.Status parseStatus(String statusStr) {

@@ -5,11 +5,13 @@ import com.kfpcl.dto.SubcategoryCreateDto;
 import com.kfpcl.dto.SubcategoryResponseDto;
 import com.kfpcl.dto.SubcategoryUpdateDto;
 import com.kfpcl.entity.Category;
+import com.kfpcl.entity.Product;
 import com.kfpcl.entity.Subcategory;
 import com.kfpcl.exception.BusinessValidationException;
 import com.kfpcl.exception.DuplicateResourceException;
 import com.kfpcl.exception.ResourceNotFoundException;
 import com.kfpcl.repository.CategoryRepository;
+import com.kfpcl.repository.ProductRepository;
 import com.kfpcl.repository.SubcategoryRepository;
 import com.kfpcl.service.SubcategoryService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
 
     private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,12 +58,12 @@ public class SubcategoryServiceImpl implements SubcategoryService {
             Subcategory.Status subStatus = parseStatus(status);
             subcategoryPage = subcategoryRepository.findByCategoryIdAndStatus(resolvedCatId, subStatus, pageable);
         } else if (StringUtils.hasText(resolvedCatId)) {
-            subcategoryPage = subcategoryRepository.findByCategoryId(resolvedCatId, pageable);
+            subcategoryPage = subcategoryRepository.findByCategoryIdAndStatusNot(resolvedCatId, Subcategory.Status.ARCHIVED, pageable);
         } else if (StringUtils.hasText(status)) {
             Subcategory.Status subStatus = parseStatus(status);
             subcategoryPage = subcategoryRepository.findByStatus(subStatus, pageable);
         } else {
-            subcategoryPage = subcategoryRepository.findAll(pageable);
+            subcategoryPage = subcategoryRepository.findByStatusNot(Subcategory.Status.ARCHIVED, pageable);
         }
 
         Map<String, String> categoryNames = categoryRepository.findAll().stream()
@@ -201,8 +204,12 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         Subcategory subcategory = subcategoryRepository.findById(subcategoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subcategory", "subcategoryId", subcategoryId));
 
-        subcategory.setStatus(Subcategory.Status.ARCHIVED);
-        subcategoryRepository.save(subcategory);
+        List<Product> products = productRepository.findBySubcategoryId(subcategoryId);
+        if (!products.isEmpty()) {
+            throw new BusinessValidationException("Cannot delete subcategory: " + products.size() + " product(s) are linked to it. Please reassign or delete the products first.");
+        }
+
+        subcategoryRepository.delete(subcategory);
     }
 
     private Subcategory.Status parseStatus(String statusStr) {
