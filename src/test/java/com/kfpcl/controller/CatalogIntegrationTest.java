@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -172,5 +173,32 @@ class CatalogIntegrationTest {
         mockMvc.perform(get("/api/v1/admin/inventory"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+
+        // 8. Physically Delete Product (200 OK) -> Verifies physical removal from DB
+        com.kfpcl.entity.Product createdProduct = productRepository.findBySku("KFP-MILK-1000-TEST").orElseThrow();
+        String createdProdId = createdProduct.getId();
+
+        mockMvc.perform(delete("/api/v1/admin/catalog/products/" + createdProdId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertFalse(productRepository.existsById(createdProdId), "Product must be physically deleted from database");
+        assertFalse(inventoryRepository.findByProductId(createdProdId).isPresent(), "Inventory must be physically deleted from database");
+
+        // Verify GET by ID returns 404
+        mockMvc.perform(get("/api/v1/catalog/products/" + createdProdId))
+                .andExpect(status().isNotFound());
+
+        // 9. Physically Delete Category (200 OK) -> Verifies cascading physical deletion of category and subcategory
+        mockMvc.perform(delete("/api/v1/admin/catalog/categories/cat_dairy_test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        assertFalse(categoryRepository.existsById("cat_dairy_test"), "Category must be physically deleted from database");
+        assertFalse(subcategoryRepository.existsById("sub_milk_test"), "Subcategory must be physically deleted from database");
+
+        // Verify GET Category by ID returns 404
+        mockMvc.perform(get("/api/v1/catalog/categories/cat_dairy_test"))
+                .andExpect(status().isNotFound());
     }
 }

@@ -11,6 +11,7 @@ import com.kfpcl.exception.BusinessValidationException;
 import com.kfpcl.exception.DuplicateResourceException;
 import com.kfpcl.repository.*;
 import com.kfpcl.serviceImpl.ProductServiceImpl;
+import com.kfpcl.util.ImageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,10 @@ class ProductServiceTest {
     private InventoryRepository inventoryRepository;
     @Mock
     private InventoryLogRepository inventoryLogRepository;
+    @Mock
+    private ReviewRepository reviewRepository;
+    @Mock
+    private ImageUtils imageUtils;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -176,5 +181,27 @@ class ProductServiceTest {
         when(subcategoryRepository.findById("sub_bread")).thenReturn(Optional.of(otherSub));
 
         assertThrows(BusinessValidationException.class, () -> productService.createProduct(dto));
+    }
+
+    @Test
+    @DisplayName("Delete Product - Physically Deletes Product Row and Associated Inventory")
+    void testDeleteProduct_PhysicallyRemovesRow() {
+        Inventory inventory = Inventory.builder()
+                .id("inv_123")
+                .productId("prod_amul_milk")
+                .sku("AML-MILK-500")
+                .build();
+
+        when(productRepository.findById("prod_amul_milk")).thenReturn(Optional.of(product));
+        when(inventoryRepository.findByProductId("prod_amul_milk")).thenReturn(Optional.of(inventory));
+
+        productService.deleteProduct("prod_amul_milk");
+
+        // Verifies real delete method is called on repository, NOT a status update save
+        verify(inventoryLogRepository, times(1)).deleteByInventoryId("inv_123");
+        verify(inventoryRepository, times(1)).delete(inventory);
+        verify(reviewRepository, times(1)).deleteByProductId("prod_amul_milk");
+        verify(productRepository, times(1)).delete(product);
+        verify(productRepository, never()).save(any(Product.class));
     }
 }

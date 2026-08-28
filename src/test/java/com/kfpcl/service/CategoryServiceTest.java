@@ -5,8 +5,9 @@ import com.kfpcl.dto.CategoryResponseDto;
 import com.kfpcl.entity.Category;
 import com.kfpcl.exception.DuplicateResourceException;
 import com.kfpcl.exception.ResourceNotFoundException;
-import com.kfpcl.repository.CategoryRepository;
+import com.kfpcl.repository.*;
 import com.kfpcl.serviceImpl.CategoryServiceImpl;
+import com.kfpcl.util.ImageUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,18 @@ class CategoryServiceTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+    @Mock
+    private SubcategoryRepository subcategoryRepository;
+    @Mock
+    private ProductRepository productRepository;
+    @Mock
+    private InventoryRepository inventoryRepository;
+    @Mock
+    private InventoryLogRepository inventoryLogRepository;
+    @Mock
+    private ReviewRepository reviewRepository;
+    @Mock
+    private ImageUtils imageUtils;
 
     @InjectMocks
     private CategoryServiceImpl categoryService;
@@ -88,5 +101,19 @@ class CategoryServiceTest {
         when(categoryRepository.findById("invalid_id")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> categoryService.getCategoryById("invalid_id"));
+    }
+
+    @Test
+    @DisplayName("Delete Category - Physically Deletes Category Row and Cascades")
+    void testDeleteCategory_PhysicallyRemovesRow() {
+        when(categoryRepository.findById("cat_dairy")).thenReturn(Optional.of(testCategory));
+        when(productRepository.findByCategoryId("cat_dairy")).thenReturn(java.util.Collections.emptyList());
+        when(subcategoryRepository.findByCategoryId("cat_dairy")).thenReturn(java.util.Collections.emptyList());
+
+        categoryService.deleteCategory("cat_dairy");
+
+        // Verifies real delete method is called on repository, NOT a status update save
+        verify(categoryRepository, times(1)).delete(testCategory);
+        verify(categoryRepository, never()).save(any(Category.class));
     }
 }

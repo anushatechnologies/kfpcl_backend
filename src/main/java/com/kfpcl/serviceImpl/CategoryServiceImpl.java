@@ -7,13 +7,10 @@ import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.entity.Category;
 import com.kfpcl.entity.Product;
 import com.kfpcl.entity.Subcategory;
-import com.kfpcl.exception.BusinessValidationException;
-import com.kfpcl.exception.DuplicateResourceException;
-import com.kfpcl.exception.ResourceNotFoundException;
-import com.kfpcl.repository.CategoryRepository;
-import com.kfpcl.repository.ProductRepository;
-import com.kfpcl.repository.SubcategoryRepository;
+import com.kfpcl.exception.*;
+import com.kfpcl.repository.*;
 import com.kfpcl.service.CategoryService;
+import com.kfpcl.util.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +32,10 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final SubcategoryRepository subcategoryRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryLogRepository inventoryLogRepository;
+    private final ReviewRepository reviewRepository;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional(readOnly = true)
@@ -96,7 +97,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .id(categoryId)
                 .name(dto.getName().trim())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .description(dto.getDescription())
                 .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 1)
                 .discount(dto.getDiscount() != null ? dto.getDiscount() : 0.0)
@@ -120,7 +121,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         if (dto.getImageUrl() != null) {
-            category.setImageUrl(dto.getImageUrl());
+            category.setImageUrl(imageUtils.processBase64Image(dto.getImageUrl()));
         }
         if (dto.getDescription() != null) {
             category.setDescription(dto.getDescription());
@@ -147,16 +148,25 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
 
+        // 1. Find and physically delete all products linked to this category
         List<Product> products = productRepository.findByCategoryId(categoryId);
-        if (!products.isEmpty()) {
-            throw new BusinessValidationException("Cannot delete category: " + products.size() + " product(s) are linked to it. Please reassign or delete the products first.");
+        for (Product product : products) {
+            inventoryRepository.findByProductId(product.getId()).ifPresent(inv -> {
+                inventoryLogRepository.deleteByInventoryId(inv.getId());
+                inventoryRepository.delete(inv);
+            });
+            inventoryLogRepository.deleteByProductId(product.getId());
+            reviewRepository.deleteByProductId(product.getId());
+            productRepository.delete(product);
         }
 
+        // 2. Physically delete all subcategories linked to this category
         List<Subcategory> subcategories = subcategoryRepository.findByCategoryId(categoryId);
         if (!subcategories.isEmpty()) {
             subcategoryRepository.deleteAll(subcategories);
         }
 
+        // 3. Physically delete the category row from database
         categoryRepository.delete(category);
     }
 

@@ -11,6 +11,7 @@ import com.kfpcl.exception.DuplicateResourceException;
 import com.kfpcl.exception.ResourceNotFoundException;
 import com.kfpcl.repository.*;
 import com.kfpcl.service.ProductService;
+import com.kfpcl.util.ImageUtils;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,7 @@ public class ProductServiceImpl implements ProductService {
     private final InventoryRepository inventoryRepository;
     private final InventoryLogRepository inventoryLogRepository;
     private final ReviewRepository reviewRepository;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional(readOnly = true)
@@ -187,7 +189,7 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryId(subcategory.getId())
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .price(dto.getPrice())
                 .mrp(dto.getMrp())
                 .quantity(dto.getQuantity())
@@ -283,7 +285,7 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryId(subcategory.getId())
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .price(dto.getPrice())
                 .mrp(dto.getMrp())
                 .quantity(dto.getQuantity())
@@ -377,7 +379,7 @@ public class ProductServiceImpl implements ProductService {
             product.setDescription(dto.getDescription());
         }
         if (dto.getImageUrl() != null) {
-            product.setImageUrl(dto.getImageUrl());
+            product.setImageUrl(imageUtils.processBase64Image(dto.getImageUrl()));
         }
         if (dto.getQuantity() != null) {
             product.setQuantity(dto.getQuantity());

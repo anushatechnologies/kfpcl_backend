@@ -7,13 +7,10 @@ import com.kfpcl.dto.SubcategoryUpdateDto;
 import com.kfpcl.entity.Category;
 import com.kfpcl.entity.Product;
 import com.kfpcl.entity.Subcategory;
-import com.kfpcl.exception.BusinessValidationException;
-import com.kfpcl.exception.DuplicateResourceException;
-import com.kfpcl.exception.ResourceNotFoundException;
-import com.kfpcl.repository.CategoryRepository;
-import com.kfpcl.repository.ProductRepository;
-import com.kfpcl.repository.SubcategoryRepository;
+import com.kfpcl.exception.*;
+import com.kfpcl.repository.*;
 import com.kfpcl.service.SubcategoryService;
+import com.kfpcl.util.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +33,10 @@ public class SubcategoryServiceImpl implements SubcategoryService {
     private final SubcategoryRepository subcategoryRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
+    private final InventoryLogRepository inventoryLogRepository;
+    private final ReviewRepository reviewRepository;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional(readOnly = true)
@@ -147,7 +148,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
                 .id(subcategoryId)
                 .categoryId(categoryId)
                 .name(dto.getName().trim())
-                .imageUrl(dto.getImageUrl())
+                .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .description(dto.getDescription())
                 .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 1)
                 .discount(dto.getDiscount() != null ? dto.getDiscount() : 0.0)
@@ -177,7 +178,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         subcategory.setCategoryId(categoryId);
 
         if (dto.getImageUrl() != null) {
-            subcategory.setImageUrl(dto.getImageUrl());
+            subcategory.setImageUrl(imageUtils.processBase64Image(dto.getImageUrl()));
         }
         if (dto.getDescription() != null) {
             subcategory.setDescription(dto.getDescription());
@@ -204,11 +205,19 @@ public class SubcategoryServiceImpl implements SubcategoryService {
         Subcategory subcategory = subcategoryRepository.findById(subcategoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subcategory", "subcategoryId", subcategoryId));
 
+        // 1. Find and physically delete all products linked to this subcategory
         List<Product> products = productRepository.findBySubcategoryId(subcategoryId);
-        if (!products.isEmpty()) {
-            throw new BusinessValidationException("Cannot delete subcategory: " + products.size() + " product(s) are linked to it. Please reassign or delete the products first.");
+        for (Product product : products) {
+            inventoryRepository.findByProductId(product.getId()).ifPresent(inv -> {
+                inventoryLogRepository.deleteByInventoryId(inv.getId());
+                inventoryRepository.delete(inv);
+            });
+            inventoryLogRepository.deleteByProductId(product.getId());
+            reviewRepository.deleteByProductId(product.getId());
+            productRepository.delete(product);
         }
 
+        // 2. Physically delete the subcategory row from database
         subcategoryRepository.delete(subcategory);
     }
 
