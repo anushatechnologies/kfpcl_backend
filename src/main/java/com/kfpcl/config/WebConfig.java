@@ -44,26 +44,20 @@ public class WebConfig implements WebMvcConfigurer {
                 .maxAge(3600);
     }
 
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.setAllowedOriginPatterns(Collections.singletonList("*"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
-        config.setAllowedHeaders(Collections.singletonList("*"));
-        config.setExposedHeaders(Collections.singletonList("*"));
-        config.setMaxAge(3600L);
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
-
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
-        // Standard Spring Boot way to serve external directories
-        String location = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
+        // Serve external directory using an absolute path to avoid relative‑path issues
+        String absoluteLocation = java.nio.file.Paths.get(uploadDir)
+                .toAbsolutePath()
+                .normalize()
+                .toString();
+        // Ensure trailing slash
+        if (!absoluteLocation.endsWith("/")) {
+            absoluteLocation = absoluteLocation + "/";
+        }
         registry.addResourceHandler("/uploads/**", "/api/v1/uploads/**")
-                .addResourceLocations("file:" + location);
+                .addResourceLocations("file:" + absoluteLocation);
     }
+
+    // Duplicate addResourceHandlers method removed to avoid compilation error
 }
