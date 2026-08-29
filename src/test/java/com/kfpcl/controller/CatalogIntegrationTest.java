@@ -18,9 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class CatalogIntegrationTest {
 
     @Autowired
@@ -43,21 +46,6 @@ class CatalogIntegrationTest {
 
     @Autowired
     private InventoryLogRepository inventoryLogRepository;
-
-    @BeforeEach
-    void cleanUpTestData() {
-        productRepository.findBySku("KFP-MILK-1000-TEST").ifPresent(p -> {
-            inventoryLogRepository.findByProductIdOrderByCreatedAtDesc(p.getId()).forEach(inventoryLogRepository::delete);
-            inventoryRepository.findByProductId(p.getId()).ifPresent(inventoryRepository::delete);
-            productRepository.delete(p);
-        });
-        if (subcategoryRepository.existsById("sub_milk_test")) {
-            subcategoryRepository.deleteById("sub_milk_test");
-        }
-        if (categoryRepository.existsById("cat_dairy_test")) {
-            categoryRepository.deleteById("cat_dairy_test");
-        }
-    }
 
     @Test
     @DisplayName("Catalog Image Upload - Success without token (201)")
@@ -93,12 +81,14 @@ class CatalogIntegrationTest {
                 .isActive(true)
                 .build();
 
-        mockMvc.perform(post("/api/v1/admin/catalog/categories")
+        String categoryResponse = mockMvc.perform(post("/api/v1/admin/catalog/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").value("cat_dairy_test"));
+                .andReturn().getResponse().getContentAsString();
+
+        String generatedCategoryId = objectMapper.readTree(categoryResponse).get("data").get("id").asText();
 
         // 2. Duplicate Category Name -> 409 Conflict (without token)
         mockMvc.perform(post("/api/v1/admin/catalog/categories")
@@ -110,24 +100,27 @@ class CatalogIntegrationTest {
         // 3. Create Subcategory (201 Created without token)
         SubcategoryCreateDto subcategoryDto = SubcategoryCreateDto.builder()
                 .id("sub_milk_test")
-                .categoryId("cat_dairy_test")
+                .categoryId(generatedCategoryId)
                 .name("Organic Milk Test")
                 .imageUrl("https://cdn/milk.jpg")
                 .displayOrder(1)
                 .isActive(true)
                 .build();
 
-        mockMvc.perform(post("/api/v1/admin/catalog/subcategories")
+        String subcategoryResponse = mockMvc.perform(post("/api/v1/admin/catalog/subcategories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(subcategoryDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.id").value("sub_milk_test"));
+                .andReturn().getResponse().getContentAsString();
+
+        String generatedSubcategoryId = objectMapper.readTree(subcategoryResponse).get("data").get("id").asText();
 
         // 4. Create Product (201 Created without token) with server-side discount
         ProductCreateDto productDto = ProductCreateDto.builder()
-                .productName("Organic Fresh Milk Test")
-                .categoryId("cat_dairy_test")
-                .subcategoryId("sub_milk_test")
+                .sku("KFP-MILK-1000-TEST")
+                .productName("Farm Fresh Organic Milk 1L")
+                .categoryId(generatedCategoryId)
+                .subcategoryId(generatedSubcategoryId)
                 .brand("KFPCL Organic")
                 .description("Pure fresh cow milk")
                 .price(40.0)
@@ -149,8 +142,8 @@ class CatalogIntegrationTest {
         // 5. Invalid Price (price > MRP) -> 422 Unprocessable Entity
         ProductCreateDto invalidPriceProduct = ProductCreateDto.builder()
                 .productName("Invalid Price Milk")
-                .categoryId("cat_dairy_test")
-                .subcategoryId("sub_milk_test")
+                .categoryId(generatedCategoryId)
+                .subcategoryId(generatedSubcategoryId)
                 .price(60.0) // Invalid
                 .mrp(50.0)
                 .sku("KFP-INVALID-PRICE")
@@ -164,7 +157,7 @@ class CatalogIntegrationTest {
         // 6. Public Buyer Product Listing (200 OK without token)
         mockMvc.perform(get("/api/v1/catalog/products")
                         .param("search", "Organic")
-                        .param("categoryId", "cat_dairy_test"))
+                        .param("categoryId", generatedCategoryId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content").isArray());
@@ -190,15 +183,15 @@ class CatalogIntegrationTest {
                 .andExpect(status().isNotFound());
 
         // 9. Physically Delete Category (200 OK) -> Verifies cascading physical deletion of category and subcategory
-        mockMvc.perform(delete("/api/v1/admin/catalog/categories/cat_dairy_test"))
+        mockMvc.perform(delete("/api/v1/admin/catalog/categories/" + generatedCategoryId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        assertFalse(categoryRepository.existsById("cat_dairy_test"), "Category must be physically deleted from database");
-        assertFalse(subcategoryRepository.existsById("sub_milk_test"), "Subcategory must be physically deleted from database");
+        assertFalse(categoryRepository.existsById(generatedCategoryId), "Category must be physically deleted from database");
+        assertFalse(subcategoryRepository.existsById(generatedSubcategoryId), "Subcategory must be physically deleted from database");
 
         // Verify GET Category by ID returns 404
-        mockMvc.perform(get("/api/v1/catalog/categories/cat_dairy_test"))
+        mockMvc.perform(get("/api/v1/catalog/categories/" + generatedCategoryId))
                 .andExpect(status().isNotFound());
     }
 }

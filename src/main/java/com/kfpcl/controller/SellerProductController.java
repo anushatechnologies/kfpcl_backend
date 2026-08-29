@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/seller/catalog/products")
+@RequestMapping({"/api/v1/seller/catalog/products", "/api/v1/seller/products"})
 @RequiredArgsConstructor
 public class SellerProductController {
 
@@ -40,5 +40,22 @@ public class SellerProductController {
         PageResponseDto<ProductResponseDto> products = productService.getSellerProducts(
                 sellerId, approvalStatus, page, size, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.success(products, "Seller products retrieved successfully"));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
+            @PathVariable String id,
+            @RequestBody com.kfpcl.dto.ProductUpdateDto dto,
+            jakarta.servlet.http.HttpServletRequest request) {
+        ProductResponseDto updated = productService.updateProduct(id, dto);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Product updated successfully"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deactivateProduct(
+            @PathVariable String id,
+            jakarta.servlet.http.HttpServletRequest request) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok(ApiResponse.success("Success", "Product deactivated/archived successfully"));
     }
 }

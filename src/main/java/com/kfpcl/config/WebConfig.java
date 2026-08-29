@@ -1,5 +1,6 @@
 package com.kfpcl.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Value("${file.upload.dir:uploads/catalog/}")
     private String uploadDir;
+
+    @Autowired
+    private MockAuthInterceptor mockAuthInterceptor;
+
+    @Override
+    public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
+        registry.addInterceptor(mockAuthInterceptor).addPathPatterns("/api/v1/**");
+    }
 
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {

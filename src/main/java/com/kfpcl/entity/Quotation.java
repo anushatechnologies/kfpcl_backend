@@ -41,6 +41,24 @@ public class Quotation {
     @Column(name = "valid_until")
     private LocalDateTime validUntil;
 
+    @Column(name = "freight")
+    private Double freight;
+
+    @Column(name = "delivery_days")
+    private Integer deliveryDays;
+
+    @Column(name = "timeline", length = 200)
+    private String timeline;
+
+    @Column(name = "payment_terms", length = 500)
+    private String paymentTerms;
+
+    @Column(name = "warranty", length = 500)
+    private String warranty;
+
+    @Column(name = "notes", length = 1000)
+    private String notes;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @Builder.Default

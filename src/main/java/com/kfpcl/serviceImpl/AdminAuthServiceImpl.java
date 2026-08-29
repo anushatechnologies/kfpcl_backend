@@ -137,6 +137,29 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                         .build());
             }
         }
+
+        // SEED MOCK USERS FOR POSTMAN TESTING
+        if (userRepository.findById("seller-123").isEmpty()) {
+            userRepository.save(User.builder()
+                    .id("seller-123")
+                    .name("Mock Seller")
+                    .email("seller@kfpcl.com")
+                    .password("password")
+                    .role(User.Role.SUPPLIER)
+                    .status(User.Status.ACTIVE)
+                    .build());
+        }
+        
+        if (userRepository.findById("buyer-999").isEmpty()) {
+            userRepository.save(User.builder()
+                    .id("buyer-999")
+                    .name("Mock Buyer")
+                    .email("buyer@kfpcl.com")
+                    .password("password")
+                    .role(User.Role.BUYER)
+                    .status(User.Status.ACTIVE)
+                    .build());
+        }
     }
 
     @Override

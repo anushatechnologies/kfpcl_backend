@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/catalog/products")
+@RequestMapping({"/api/v1/catalog/products", "/api/v1/products"})
 @RequiredArgsConstructor
 public class BuyerProductController {
 
@@ -23,13 +23,15 @@ public class BuyerProductController {
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer maxMoq,
+            @RequestParam(required = false) Boolean verifiedOnly,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
         PageResponseDto<ProductResponseDto> products = productService.getBuyerProducts(
-                search, categoryId, subcategoryId, brand, minPrice, maxPrice, page, size, sortBy, sortDir);
+                search, categoryId, subcategoryId, brand, minPrice, maxPrice, maxMoq, verifiedOnly, page, size, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.success(products, "Buyer products retrieved successfully"));
     }
 

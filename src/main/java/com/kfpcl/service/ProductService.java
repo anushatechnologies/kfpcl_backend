@@ -8,7 +8,7 @@ import com.kfpcl.dto.SellerProductCreateDto;
 
 public interface ProductService {
 
-    PageResponseDto<ProductResponseDto> getBuyerProducts(String search, String categoryId, String subcategoryId, String brand, Double minPrice, Double maxPrice, int page, int size, String sortBy, String sortDir);
+    PageResponseDto<ProductResponseDto> getBuyerProducts(String search, String categoryId, String subcategoryId, String brand, Double minPrice, Double maxPrice, Integer maxMoq, Boolean verifiedOnly, int page, int size, String sortBy, String sortDir);
 
     ProductResponseDto getBuyerProductById(String productId);
 

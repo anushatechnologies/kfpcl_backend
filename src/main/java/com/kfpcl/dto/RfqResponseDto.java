@@ -19,6 +19,9 @@ public class RfqResponseDto {
     private String buyerName;
     private String productId;
     private String productName;
+    private String title;
+    private String categoryId;
+    private String specifications;
     private Integer quantity;
     private Double targetPrice;
     private String status;

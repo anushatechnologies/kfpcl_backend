@@ -22,6 +22,12 @@ public class QuotationResponseDto {
     private LocalDateTime validUntil;
     private String status;
     private String terms;
+    private Double freight;
+    private Integer deliveryDays;
+    private String timeline;
+    private String paymentTerms;
+    private String warranty;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

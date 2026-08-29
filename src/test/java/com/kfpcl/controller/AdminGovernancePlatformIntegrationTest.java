@@ -21,9 +21,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class AdminGovernancePlatformIntegrationTest {
 
     @Autowired
@@ -46,6 +49,12 @@ class AdminGovernancePlatformIntegrationTest {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private com.kfpcl.repository.CategoryRepository categoryRepository;
+
+    @Autowired
+    private com.kfpcl.repository.SubcategoryRepository subcategoryRepository;
 
     private User buyerUser;
     private User sellerUser;
@@ -89,6 +98,23 @@ class AdminGovernancePlatformIntegrationTest {
             brandRepository.deleteById("brand_organic_india_test");
         }
         brandRepository.findByNameIgnoreCase("Organic India Test").ifPresent(brandRepository::delete);
+
+        // CREATE MISSING CATEGORY AND SUBCATEGORY TO SATISFY FOREIGN KEY CONSTRAINTS
+        if (!categoryRepository.existsById("cat_dairy_test")) {
+            categoryRepository.save(com.kfpcl.entity.Category.builder()
+                    .id("cat_dairy_test")
+                    .name("Dairy Test")
+                    .status(com.kfpcl.entity.Category.Status.ACTIVE)
+                    .build());
+        }
+        if (!subcategoryRepository.existsById("sub_milk_test")) {
+            subcategoryRepository.save(com.kfpcl.entity.Subcategory.builder()
+                    .id("sub_milk_test")
+                    .categoryId("cat_dairy_test")
+                    .name("Milk Test")
+                    .status(com.kfpcl.entity.Subcategory.Status.ACTIVE)
+                    .build());
+        }
 
         testProduct = productRepository.findBySku("KFP-PROD-TEST-GOV").orElse(null);
         if (testProduct == null) {

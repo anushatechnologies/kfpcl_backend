@@ -58,6 +58,13 @@ public class Product {
     @Builder.Default
     private Integer stockQuantity = 0;
 
+    @Column(name = "min_order_quantity", nullable = false)
+    @Builder.Default
+    private Integer minOrderQuantity = 1;
+
+    @Column(name = "specifications", length = 4000)
+    private String specifications;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @Builder.Default

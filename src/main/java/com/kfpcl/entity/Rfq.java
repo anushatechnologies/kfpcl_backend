@@ -38,6 +38,15 @@ public class Rfq {
     @Column(name = "product_name", nullable = false, length = 200)
     private String productName;
 
+    @Column(name = "title", length = 300)
+    private String title;
+
+    @Column(name = "category_id", length = 64)
+    private String categoryId;
+
+    @Column(name = "specifications", length = 4000)
+    private String specifications;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
