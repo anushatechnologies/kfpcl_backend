@@ -61,8 +61,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
-        String absolutePath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        // Standard Spring Boot way to serve external directories
+        String location = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(absolutePath.endsWith("/") ? absolutePath : absolutePath + "/");
+                .addResourceLocations("file:" + location);
     }
 }
