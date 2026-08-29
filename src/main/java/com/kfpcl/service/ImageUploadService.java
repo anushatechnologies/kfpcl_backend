@@ -12,4 +12,9 @@ public interface ImageUploadService {
     String uploadBase64Image(String imageDataUri);
 
     void deleteFile(String fileUrl);
+
+    // Entity‑specific image upload methods
+    ImageUploadResponseDto uploadCategoryImage(MultipartFile file);
+    ImageUploadResponseDto uploadSubcategoryImage(MultipartFile file);
+    ImageUploadResponseDto uploadProductImage(MultipartFile file);
 }
