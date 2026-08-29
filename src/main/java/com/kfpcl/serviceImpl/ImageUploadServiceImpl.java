@@ -134,8 +134,13 @@ public class ImageUploadServiceImpl implements ImageUploadService {
             throw new StorageException("Failed to upload file to S3", ex);
         }
         return ImageUploadResponseDto.builder()
-                .fileName(fileName).fileUrl(buildObjectUrl(key)).fileSize(content.length)
-                .contentType(contentType).uploadedAt(LocalDateTime.now()).build();
+                .fileName(fileName)
+                .imageKey(key)
+                .fileUrl(key)
+                .fileSize(content.length)
+                .contentType(contentType)
+                .uploadedAt(LocalDateTime.now())
+                .build();
     }
 
     private String buildObjectUrl(String key) {
@@ -144,7 +149,13 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
     private String extractOwnedKey(String fileUrl) {
         String prefix = "https://" + bucket + ".s3." + region + ".amazonaws.com/";
-        return fileUrl.startsWith(prefix) ? fileUrl.substring(prefix.length()) : null;
+        if (fileUrl.startsWith(prefix)) {
+            return fileUrl.substring(prefix.length());
+        }
+        if (!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
+            return fileUrl;
+        }
+        return null;
     }
 
     private void validateContentType(String contentType) {

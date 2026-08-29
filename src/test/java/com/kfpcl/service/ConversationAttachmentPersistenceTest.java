@@ -34,7 +34,8 @@ class ConversationAttachmentPersistenceTest {
         when(conversationRepository.existsById("conv_123")).thenReturn(true);
         when(imageUploadService.uploadConversationAttachment(eq("conv_123"), any())).thenReturn(
                 ImageUploadResponseDto.builder().fileName("a.jpg")
-                        .fileUrl("https://kfpcl-backend-images-2026.s3.ap-south-1.amazonaws.com/conversations/conv_123/a.jpg")
+                        .fileUrl("conversations/conv_123/a.jpg")
+                        .imageKey("conversations/conv_123/a.jpg")
                         .fileSize(12).contentType("image/jpeg").build());
         when(messageAttachmentRepository.save(any(MessageAttachment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -43,7 +44,7 @@ class ConversationAttachmentPersistenceTest {
 
         ArgumentCaptor<MessageAttachment> attachment = ArgumentCaptor.forClass(MessageAttachment.class);
         verify(messageAttachmentRepository).save(attachment.capture());
-        assertEquals("https://kfpcl-backend-images-2026.s3.ap-south-1.amazonaws.com/conversations/conv_123/a.jpg",
+        assertEquals("conversations/conv_123/a.jpg",
                 attachment.getValue().getFileUrl());
     }
 }

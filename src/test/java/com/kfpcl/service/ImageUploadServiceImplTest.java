@@ -39,7 +39,8 @@ class ImageUploadServiceImplTest {
         assertEquals("kfpcl-backend-images-2026", request.getValue().bucket());
         assertTrue(request.getValue().key().matches("catalog/[0-9a-f-]+-fresh_milk\\.jpg"));
         assertEquals("image/jpeg", request.getValue().contentType());
-        assertEquals("https://kfpcl-backend-images-2026.s3.ap-south-1.amazonaws.com/" + request.getValue().key(), result.getFileUrl());
+        assertEquals(request.getValue().key(), result.getFileUrl());
+        assertEquals(request.getValue().key(), result.getImageKey());
     }
 
     @Test
@@ -69,9 +70,15 @@ class ImageUploadServiceImplTest {
         verify(s3Client).deleteObject(request.capture());
         assertEquals("catalog/a.jpg", request.getValue().key());
 
+        // Test deleting raw relative key
+        String relativeKey = "catalog/b.jpg";
+        service().deleteFile(relativeKey);
+        verify(s3Client, times(2)).deleteObject(request.capture());
+        assertEquals("catalog/b.jpg", request.getValue().key());
+
         doThrow(S3Exception.builder().message("Access denied").build()).when(s3Client).deleteObject(any(DeleteObjectRequest.class));
         assertThrows(StorageException.class, () -> service().deleteFile(url));
         service().deleteFile("https://example.test/other-image.jpg");
-        verify(s3Client, times(2)).deleteObject(any(DeleteObjectRequest.class));
+        verify(s3Client, times(3)).deleteObject(any(DeleteObjectRequest.class));
     }
 }

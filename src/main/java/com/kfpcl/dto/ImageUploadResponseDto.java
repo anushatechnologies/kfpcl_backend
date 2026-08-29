@@ -15,6 +15,7 @@ public class ImageUploadResponseDto {
 
     private String fileName;
     private String fileUrl;
+    private String imageKey;
     private long fileSize;
     private String contentType;
 
