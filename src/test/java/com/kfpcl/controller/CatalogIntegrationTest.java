@@ -54,7 +54,7 @@ class CatalogIntegrationTest {
                 "file",
                 "milk.jpg",
                 MediaType.IMAGE_JPEG_VALUE,
-                "dummy image content".getBytes()
+                new byte[0]
         );
 
         mockMvc.perform(multipart("/api/v1/admin/catalog/images")
