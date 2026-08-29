@@ -35,7 +35,16 @@ public class SellerProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDir) {
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            @javax.servlet.http.HttpServletRequest request) {
+
+        // If the client didn't pass a sellerId, fall back to the authenticated user from MockAuthInterceptor
+        if (!org.springframework.util.StringUtils.hasText(sellerId)) {
+            Object authUser = request.getAttribute("authenticatedUser");
+            if (authUser != null) {
+                sellerId = authUser.toString();
+            }
+        }
 
         PageResponseDto<ProductResponseDto> products = productService.getSellerProducts(
                 sellerId, approvalStatus, page, size, sortBy, sortDir);
