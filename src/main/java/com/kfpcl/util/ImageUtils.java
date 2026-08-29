@@ -57,7 +57,7 @@ public class ImageUtils {
 
             Files.write(targetPath, decodedBytes);
 
-            return "/uploads/" + uniqueFileName;
+            return "/api/v1/uploads/" + uniqueFileName;
         } catch (Exception e) {
             System.err.println("Failed to process base64 image: " + e.getMessage());
             return imageUrl;

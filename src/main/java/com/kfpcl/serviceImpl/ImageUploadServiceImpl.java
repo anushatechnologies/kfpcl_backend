@@ -56,7 +56,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
-            String fileUrl = "/uploads/" + uniqueFileName;
+            String fileUrl = "/api/v1/uploads/" + uniqueFileName;
 
             return ImageUploadResponseDto.builder()
                     .fileName(uniqueFileName)
