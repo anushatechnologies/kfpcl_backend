@@ -63,7 +63,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         // Standard Spring Boot way to serve external directories
         String location = uploadDir.endsWith("/") ? uploadDir : uploadDir + "/";
-        registry.addResourceHandler("/uploads/**")
+        registry.addResourceHandler("/uploads/**", "/api/v1/uploads/**")
                 .addResourceLocations("file:" + location);
     }
 }
