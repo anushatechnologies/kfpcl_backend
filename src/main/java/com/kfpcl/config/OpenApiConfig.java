@@ -22,7 +22,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("KFPCL B2B Marketplace - Developer 1 API")
                         .description("REST API Documentation for Developer 1 Module: Authentication, User Profiles, Seller KYC, and Account Security.\n\n" +
-                                "**Authentication Mechanism:** Server-Side Session Authentication via Secure HttpOnly Cookies (NO JWT USED).")
+                                "**Authentication Mechanism:** Server-Side Session Authentication via Secure HttpOnly Cookies.")
                         .version("1.0.0")
                         .contact(new Contact()
                                 .name("KFPCL Engineering Team")
