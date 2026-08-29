@@ -166,7 +166,7 @@ public class ConversationServiceImpl implements ConversationService {
             throw new ResourceNotFoundException("Conversation", "conversationId", conversationId);
         }
 
-        ImageUploadResponseDto upload = imageUploadService.uploadCatalogImage(file);
+        ImageUploadResponseDto upload = imageUploadService.uploadConversationAttachment(conversationId, file);
 
         MessageAttachment attachment = MessageAttachment.builder()
                 .id("att_" + UUID.randomUUID().toString().substring(0, 8))

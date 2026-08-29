@@ -1,10 +1,15 @@
 {
   "properties": [
     {
-      "name": "file.upload.dir",
+      "name": "aws.s3.bucket",
       "type": "java.lang.String",
-      "description": "Directory path where uploaded catalog images are stored.",
-      "defaultValue": "uploads/catalog/"
+      "description": "S3 bucket used for uploaded images and attachments.",
+      "defaultValue": "kfpcl-backend-images-2026"
+    },
+    {
+      "name": "aws.s3.region",
+      "type": "java.lang.String",
+      "description": "AWS region that contains the S3 bucket."
     }
   ]
 }
