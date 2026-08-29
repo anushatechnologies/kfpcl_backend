@@ -1,16 +1,15 @@
-package com.kfpcl.controller;
-
-import com.kfpcl.dto.ApiResponse;
+package com.kfpcl.controller;import com.kfpcl.dto.ApiResponse;
 import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.ProductResponseDto;
 import com.kfpcl.dto.SellerProductCreateDto;
+import com.kfpcl.dto.ProductUpdateDto;
 import com.kfpcl.service.ProductService;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping({"/api/v1/seller/catalog/products", "/api/v1/seller/products"})
 @RequiredArgsConstructor
@@ -36,7 +35,7 @@ public class SellerProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir,
-            @javax.servlet.http.HttpServletRequest request) {
+            HttpServletRequest request) {
 
         // If the client didn't pass a sellerId, fall back to the authenticated user from MockAuthInterceptor
         if (!org.springframework.util.StringUtils.hasText(sellerId)) {

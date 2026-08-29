@@ -4,6 +4,7 @@ import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.ProductCreateDto;
 import com.kfpcl.dto.ProductResponseDto;
 import com.kfpcl.dto.ProductUpdateDto;
+import com.kfpcl.dto.ProductVariantDto;
 import com.kfpcl.dto.SellerProductCreateDto;
 import com.kfpcl.entity.*;
 import com.kfpcl.exception.BusinessValidationException;
@@ -39,6 +40,7 @@ public class ProductServiceImpl implements ProductService {
     private final InventoryRepository inventoryRepository;
     private final InventoryLogRepository inventoryLogRepository;
     private final ReviewRepository reviewRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final ImageUtils imageUtils;
 
     @Override
@@ -164,29 +166,23 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessValidationException("Cannot create product under an inactive or archived subcategory: " + subcategory.getName());
         }
 
-        // 2. Validate SKU Uniqueness
-        if (productRepository.existsBySku(dto.getSku().trim())) {
-            throw new DuplicateResourceException("Product", "sku", dto.getSku());
-        }
+        // Validate measurement type and unit
+        MeasurementType measurementType = parseMeasurementType(dto.getMeasurementType());
+        validateProductUnit(measurementType.name(), dto.getUnit(), dto.getProductName());
 
-        // 3. Validate Price & MRP Rules
-        if (dto.getPrice() > dto.getMrp()) {
-            throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", dto.getPrice(), dto.getMrp()));
-        }
+        // Process Variants if provided
+        List<ProductVariant> variants = new ArrayList<>();
+        int initialStock = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
+        Double primaryPrice = dto.getPrice();
+        Double primaryMrp = dto.getMrp();
+        String primarySku = dto.getSku();
 
-        // 4. Calculate server-side discount percentage
-        double calculatedDiscount = calculateDiscount(dto.getPrice(), dto.getMrp());
-
-        // 5. Generate Product ID if not provided
+        // Generate Product ID if not provided
         String productId = StringUtils.hasText(dto.getId())
                 ? dto.getId().trim()
                 : "prod_" + slugify(dto.getProductName()) + "_" + UUID.randomUUID().toString().substring(0, 6);
 
-        int initialStock = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
         Product.Status status = parseStatus(dto.getStatus());
-        if (initialStock <= 0 && status == Product.Status.ACTIVE) {
-            // Optional: retain ACTIVE or mark IN_STOCK per requirements
-        }
 
         Product product = Product.builder()
                 .id(productId)
@@ -196,17 +192,80 @@ public class ProductServiceImpl implements ProductService {
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
                 .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
-                .price(dto.getPrice())
-                .mrp(dto.getMrp())
                 .quantity(dto.getQuantity())
                 .unit(dto.getUnit())
-                .stockQuantity(initialStock)
                 .status(status)
+                .measurementType(measurementType)
                 .approvalStatus(Product.ApprovalStatus.APPROVED)
                 .createdBy("ADMIN")
-                .sku(dto.getSku().trim())
-                .discount(calculatedDiscount)
                 .build();
+
+        if (dto.getVariants() != null && !dto.getVariants().isEmpty()) {
+            Set<String> listSkus = new HashSet<>();
+            int totalStock = 0;
+            for (ProductVariantDto varDto : dto.getVariants()) {
+                String varSku = varDto.getSku().trim();
+                if (listSkus.contains(varSku)) {
+                    throw new DuplicateResourceException("ProductVariant", "sku", varSku + " (duplicate in request)");
+                }
+                listSkus.add(varSku);
+
+                if (productRepository.existsBySku(varSku) || productVariantRepository.existsBySku(varSku)) {
+                    throw new DuplicateResourceException("ProductVariant", "sku", varSku);
+                }
+
+                Double varMrp = varDto.getMrp();
+                Double varPrice = varDto.getPrice();
+                if (varPrice == null || varPrice <= 0) {
+                    varPrice = varMrp;
+                }
+                if (varPrice > varMrp) {
+                    throw new BusinessValidationException(String.format("Variant price (%.2f) cannot exceed MRP (%.2f)", varPrice, varMrp));
+                }
+
+                ProductVariant variant = ProductVariant.builder()
+                        .id("var_" + UUID.randomUUID().toString().substring(0, 8))
+                        .product(product)
+                        .variantName(varDto.getVariantName().trim())
+                        .sku(varSku)
+                        .mrp(varMrp)
+                        .price(varPrice)
+                        .stockQuantity(varDto.getStockQuantity())
+                        .displayOrder(varDto.getDisplayOrder())
+                        .active(varDto.getActive() != null ? varDto.getActive() : true)
+                        .build();
+
+                if (variant.getActive()) {
+                    totalStock += variant.getStockQuantity();
+                }
+                variants.add(variant);
+            }
+
+            if (!variants.isEmpty()) {
+                ProductVariant first = variants.get(0);
+                primaryPrice = first.getPrice();
+                primaryMrp = first.getMrp();
+                primarySku = first.getSku();
+                initialStock = totalStock;
+            }
+            product.setVariants(variants);
+        } else {
+            // Validate SKU Uniqueness for single variant
+            if (productRepository.existsBySku(dto.getSku().trim())) {
+                throw new DuplicateResourceException("Product", "sku", dto.getSku());
+            }
+            // Validate Price & MRP Rules for single variant
+            if (dto.getPrice() > dto.getMrp()) {
+                throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", dto.getPrice(), dto.getMrp()));
+            }
+        }
+
+        double calculatedDiscount = calculateDiscount(primaryPrice, primaryMrp);
+        product.setPrice(primaryPrice);
+        product.setMrp(primaryMrp);
+        product.setSku(primarySku.trim());
+        product.setStockQuantity(initialStock);
+        product.setDiscount(calculatedDiscount);
 
         Product savedProduct = productRepository.save(product);
 
@@ -265,25 +324,21 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessValidationException("Cannot submit product under an inactive or archived subcategory: " + subcategory.getName());
         }
 
-        // 2. Validate SKU Uniqueness
-        if (productRepository.existsBySku(dto.getSku().trim())) {
-            throw new DuplicateResourceException("Product", "sku", dto.getSku());
-        }
+        // Validate measurement type and unit
+        MeasurementType measurementType = parseMeasurementType(dto.getMeasurementType());
+        validateProductUnit(measurementType.name(), dto.getUnit(), dto.getProductName());
 
-        // 3. Validate Price & MRP Rules
-        if (dto.getPrice() > dto.getMrp()) {
-            throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", dto.getPrice(), dto.getMrp()));
-        }
-
-        double calculatedDiscount = calculateDiscount(dto.getPrice(), dto.getMrp());
+        // Process Variants if provided
+        List<ProductVariant> variants = new ArrayList<>();
+        int initialStock = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
+        Double primaryPrice = dto.getPrice();
+        Double primaryMrp = dto.getMrp();
+        String primarySku = dto.getSku();
 
         String productId = StringUtils.hasText(dto.getId())
                 ? dto.getId().trim()
                 : "prod_" + slugify(dto.getProductName()) + "_" + UUID.randomUUID().toString().substring(0, 6);
 
-        int initialStock = dto.getStockQuantity() != null ? dto.getStockQuantity() : 0;
-
-        // Seller submitted products require admin approval (PENDING & INACTIVE)
         Product product = Product.builder()
                 .id(productId)
                 .productName(dto.getProductName().trim())
@@ -292,18 +347,81 @@ public class ProductServiceImpl implements ProductService {
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
                 .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
-                .price(dto.getPrice())
-                .mrp(dto.getMrp())
                 .quantity(dto.getQuantity())
                 .unit(dto.getUnit())
-                .stockQuantity(initialStock)
                 .status(Product.Status.INACTIVE)
+                .measurementType(measurementType)
                 .approvalStatus(Product.ApprovalStatus.PENDING)
                 .sellerId(dto.getSellerId().trim())
                 .createdBy("SELLER")
-                .sku(dto.getSku().trim())
-                .discount(calculatedDiscount)
                 .build();
+
+        if (dto.getVariants() != null && !dto.getVariants().isEmpty()) {
+            Set<String> listSkus = new HashSet<>();
+            int totalStock = 0;
+            for (ProductVariantDto varDto : dto.getVariants()) {
+                String varSku = varDto.getSku().trim();
+                if (listSkus.contains(varSku)) {
+                    throw new DuplicateResourceException("ProductVariant", "sku", varSku + " (duplicate in request)");
+                }
+                listSkus.add(varSku);
+
+                if (productRepository.existsBySku(varSku) || productVariantRepository.existsBySku(varSku)) {
+                    throw new DuplicateResourceException("ProductVariant", "sku", varSku);
+                }
+
+                Double varMrp = varDto.getMrp();
+                Double varPrice = varDto.getPrice();
+                if (varPrice == null || varPrice <= 0) {
+                    varPrice = varMrp;
+                }
+                if (varPrice > varMrp) {
+                    throw new BusinessValidationException(String.format("Variant price (%.2f) cannot exceed MRP (%.2f)", varPrice, varMrp));
+                }
+
+                ProductVariant variant = ProductVariant.builder()
+                        .id("var_" + UUID.randomUUID().toString().substring(0, 8))
+                        .product(product)
+                        .variantName(varDto.getVariantName().trim())
+                        .sku(varSku)
+                        .mrp(varMrp)
+                        .price(varPrice)
+                        .stockQuantity(varDto.getStockQuantity())
+                        .displayOrder(varDto.getDisplayOrder())
+                        .active(varDto.getActive() != null ? varDto.getActive() : true)
+                        .build();
+
+                if (variant.getActive()) {
+                    totalStock += variant.getStockQuantity();
+                }
+                variants.add(variant);
+            }
+
+            if (!variants.isEmpty()) {
+                ProductVariant first = variants.get(0);
+                primaryPrice = first.getPrice();
+                primaryMrp = first.getMrp();
+                primarySku = first.getSku();
+                initialStock = totalStock;
+            }
+            product.setVariants(variants);
+        } else {
+            // Validate SKU Uniqueness for single variant
+            if (productRepository.existsBySku(dto.getSku().trim())) {
+                throw new DuplicateResourceException("Product", "sku", dto.getSku());
+            }
+            // Validate Price & MRP Rules for single variant
+            if (dto.getPrice() > dto.getMrp()) {
+                throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", dto.getPrice(), dto.getMrp()));
+            }
+        }
+
+        double calculatedDiscount = calculateDiscount(primaryPrice, primaryMrp);
+        product.setPrice(primaryPrice);
+        product.setMrp(primaryMrp);
+        product.setSku(primarySku.trim());
+        product.setStockQuantity(initialStock);
+        product.setDiscount(calculatedDiscount);
 
         Product savedProduct = productRepository.save(product);
 
@@ -352,11 +470,89 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        if (StringUtils.hasText(dto.getSku())) {
-            if (productRepository.existsBySkuAndIdNot(dto.getSku().trim(), productId)) {
-                throw new DuplicateResourceException("Product", "sku", dto.getSku());
+        if (StringUtils.hasText(dto.getMeasurementType())) {
+            product.setMeasurementType(parseMeasurementType(dto.getMeasurementType()));
+        }
+
+        String unit = dto.getUnit() != null ? dto.getUnit() : product.getUnit();
+        String name = dto.getProductName() != null ? dto.getProductName() : product.getProductName();
+        validateProductUnit(product.getMeasurementType().name(), unit, name);
+
+        if (dto.getVariants() != null) {
+            product.getVariants().clear();
+            if (!dto.getVariants().isEmpty()) {
+                Set<String> listSkus = new HashSet<>();
+                int totalStock = 0;
+                for (ProductVariantDto varDto : dto.getVariants()) {
+                    String varSku = varDto.getSku().trim();
+                    if (listSkus.contains(varSku)) {
+                        throw new DuplicateResourceException("ProductVariant", "sku", varSku + " (duplicate in request)");
+                    }
+                    listSkus.add(varSku);
+
+                    Optional<ProductVariant> existingVarOpt = productVariantRepository.findBySku(varSku);
+                    if (existingVarOpt.isPresent() && !existingVarOpt.get().getProduct().getId().equals(productId)) {
+                        throw new DuplicateResourceException("ProductVariant", "sku", varSku);
+                    }
+                    Optional<Product> existingProductOpt = productRepository.findBySku(varSku);
+                    if (existingProductOpt.isPresent() && !existingProductOpt.get().getId().equals(productId)) {
+                        throw new DuplicateResourceException("Product", "sku", varSku);
+                    }
+
+                    Double varMrp = varDto.getMrp();
+                    Double varPrice = varDto.getPrice();
+                    if (varPrice == null || varPrice <= 0) {
+                        varPrice = varMrp;
+                    }
+                    if (varPrice > varMrp) {
+                        throw new BusinessValidationException(String.format("Variant price (%.2f) cannot exceed MRP (%.2f)", varPrice, varMrp));
+                    }
+
+                    ProductVariant variant = ProductVariant.builder()
+                            .id(StringUtils.hasText(varDto.getId()) ? varDto.getId().trim() : "var_" + UUID.randomUUID().toString().substring(0, 8))
+                            .product(product)
+                            .variantName(varDto.getVariantName().trim())
+                            .sku(varSku)
+                            .mrp(varMrp)
+                            .price(varPrice)
+                            .stockQuantity(varDto.getStockQuantity())
+                            .displayOrder(varDto.getDisplayOrder())
+                            .active(varDto.getActive() != null ? varDto.getActive() : true)
+                            .build();
+
+                    if (variant.getActive()) {
+                        totalStock += variant.getStockQuantity();
+                    }
+                    product.getVariants().add(variant);
+                }
+
+                if (!product.getVariants().isEmpty()) {
+                    ProductVariant first = product.getVariants().get(0);
+                    product.setPrice(first.getPrice());
+                    product.setMrp(first.getMrp());
+                    product.setSku(first.getSku());
+                    product.setStockQuantity(totalStock);
+                    product.setDiscount(calculateDiscount(first.getPrice(), first.getMrp()));
+                }
             }
-            product.setSku(dto.getSku().trim());
+        } else {
+            if (StringUtils.hasText(dto.getSku())) {
+                if (productRepository.existsBySkuAndIdNot(dto.getSku().trim(), productId)) {
+                    throw new DuplicateResourceException("Product", "sku", dto.getSku());
+                }
+                product.setSku(dto.getSku().trim());
+            }
+
+            double price = dto.getPrice() != null ? dto.getPrice() : product.getPrice();
+            double mrp = dto.getMrp() != null ? dto.getMrp() : product.getMrp();
+
+            if (price > mrp) {
+                throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", price, mrp));
+            }
+
+            product.setPrice(price);
+            product.setMrp(mrp);
+            product.setDiscount(calculateDiscount(price, mrp));
         }
 
         if (StringUtils.hasText(dto.getCategoryId())) {
@@ -394,17 +590,6 @@ public class ProductServiceImpl implements ProductService {
             product.setUnit(dto.getUnit());
         }
 
-        double price = dto.getPrice() != null ? dto.getPrice() : product.getPrice();
-        double mrp = dto.getMrp() != null ? dto.getMrp() : product.getMrp();
-
-        if (price > mrp) {
-            throw new BusinessValidationException(String.format("Product price (%.2f) cannot exceed MRP (%.2f)", price, mrp));
-        }
-
-        product.setPrice(price);
-        product.setMrp(mrp);
-        product.setDiscount(calculateDiscount(price, mrp));
-
         if (StringUtils.hasText(dto.getStatus())) {
             product.setStatus(parseStatus(dto.getStatus()));
         }
@@ -439,6 +624,54 @@ public class ProductServiceImpl implements ProductService {
 
         // Delete product from database
         productRepository.delete(product);
+    }
+
+    private void validateProductUnit(String measurementType, String unit, String productName) {
+        boolean isSolid = "SOLID".equalsIgnoreCase(measurementType)
+                || (productName != null && productName.toLowerCase().contains("flour"));
+
+        boolean isLiquid = "LIQUID".equalsIgnoreCase(measurementType);
+
+        if (isSolid && unit != null) {
+            String cleanUnit = unit.trim().toLowerCase();
+            if (!cleanUnit.equals("gm") && !cleanUnit.equals("kg")) {
+                throw new BusinessValidationException("Solid/Flour products must use 'gm' or 'kg' as unit.");
+            }
+        } else if (isLiquid && unit != null) {
+            String cleanUnit = unit.trim().toLowerCase();
+            if (!cleanUnit.equals("ml") && !cleanUnit.equals("litres") && !cleanUnit.equals("litre") && !cleanUnit.equals("liters") && !cleanUnit.equals("l")) {
+                throw new BusinessValidationException("Liquid products must use 'ml' or 'litres' as unit.");
+            }
+        }
+    }
+
+    private MeasurementType parseMeasurementType(String typeStr) {
+        if (!StringUtils.hasText(typeStr)) {
+            return MeasurementType.SOLID;
+        }
+        try {
+            return MeasurementType.valueOf(typeStr.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            return MeasurementType.SOLID;
+        }
+    }
+
+    private List<ProductVariantDto> mapVariantsToDto(List<ProductVariant> variants) {
+        if (variants == null) {
+            return new ArrayList<>();
+        }
+        return variants.stream()
+                .map(v -> ProductVariantDto.builder()
+                        .id(v.getId())
+                        .variantName(v.getVariantName())
+                        .sku(v.getSku())
+                        .mrp(v.getMrp())
+                        .price(v.getPrice())
+                        .stockQuantity(v.getStockQuantity())
+                        .displayOrder(v.getDisplayOrder())
+                        .active(v.getActive())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private double calculateDiscount(double price, double mrp) {
@@ -520,6 +753,8 @@ public class ProductServiceImpl implements ProductService {
                 .discount(product.getDiscount())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
+                .measurementType(product.getMeasurementType() != null ? product.getMeasurementType().name() : null)
+                .variants(mapVariantsToDto(product.getVariants()))
                 .build();
     }
 }

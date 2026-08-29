@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 import java.time.LocalDateTime;
 
@@ -36,4 +37,8 @@ public class ProductResponseDto {
     private Double discount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String measurementType;
+
+    private List<ProductVariantDto> variants;
 }

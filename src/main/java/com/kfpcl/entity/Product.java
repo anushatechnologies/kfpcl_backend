@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products", indexes = {
@@ -71,6 +73,11 @@ public class Product {
     private Status status = Status.ACTIVE;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "measurement_type", nullable = false, length = 20)
+    @Builder.Default
+    private MeasurementType measurementType = MeasurementType.SOLID;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "approval_status", length = 30)
     @Builder.Default
     private ApprovalStatus approvalStatus = ApprovalStatus.APPROVED;
@@ -90,6 +97,10 @@ public class Product {
 
     @Column(name = "discount")
     private Double discount;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductVariant> variants = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

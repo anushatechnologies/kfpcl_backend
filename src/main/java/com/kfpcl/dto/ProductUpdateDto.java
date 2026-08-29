@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @Builder
@@ -29,4 +30,8 @@ public class ProductUpdateDto {
     private String unit;
     private String status;
     private String sku;
+
+    private String measurementType;
+
+    private List<ProductVariantDto> variants;
 }
