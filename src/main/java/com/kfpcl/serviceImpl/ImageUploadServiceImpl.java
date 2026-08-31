@@ -190,7 +190,9 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private String extractOwnedKey(String fileUrl) {
         String prefix = "https://" + bucket + ".s3." + region + ".amazonaws.com/";
         if (fileUrl.startsWith(prefix)) {
-            return fileUrl.substring(prefix.length());
+            String keyWithParams = fileUrl.substring(prefix.length());
+            int queryIndex = keyWithParams.indexOf('?');
+            return queryIndex > 0 ? keyWithParams.substring(0, queryIndex) : keyWithParams;
         }
         if (!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
             if (fileUrl.startsWith("/uploads/")) {
