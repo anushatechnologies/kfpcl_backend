@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 @RestController
-@RequestMapping({"/api/v1/seller/catalog/products", "/api/v1/seller/products"})
+@RequestMapping("/api/v1/seller/products")
 @RequiredArgsConstructor
 public class SellerProductController {
 
@@ -53,7 +53,7 @@ public class SellerProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponseDto>> updateProduct(
             @PathVariable String id,
-            @RequestBody com.kfpcl.dto.ProductUpdateDto dto,
+            @RequestBody ProductUpdateDto dto,
             jakarta.servlet.http.HttpServletRequest request) {
         ProductResponseDto updated = productService.updateProduct(id, dto);
         return ResponseEntity.ok(ApiResponse.success(updated, "Product updated successfully"));

@@ -79,13 +79,13 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
     @Override
     public OrderStatusBreakdownDto getOrderStatusBreakdown() {
-        long pending = orderRepository.countByOrderStatus(Order.OrderStatus.PENDING);
-        long confirmed = orderRepository.countByOrderStatus(Order.OrderStatus.CONFIRMED);
-        long processing = orderRepository.countByOrderStatus(Order.OrderStatus.PROCESSING);
-        long shipped = orderRepository.countByOrderStatus(Order.OrderStatus.SHIPPED);
-        long delivered = orderRepository.countByOrderStatus(Order.OrderStatus.DELIVERED);
-        long cancelled = orderRepository.countByOrderStatus(Order.OrderStatus.CANCELLED);
-        long returned = orderRepository.countByOrderStatus(Order.OrderStatus.RETURNED);
+        long pending = orderRepository.countByStatus(com.kfpcl.entity.OrderStatus.CREATED);
+        long confirmed = 0;
+        long processing = orderRepository.countByStatus(com.kfpcl.entity.OrderStatus.PROCESSING);
+        long shipped = orderRepository.countByStatus(com.kfpcl.entity.OrderStatus.SHIPPED);
+        long delivered = orderRepository.countByStatus(com.kfpcl.entity.OrderStatus.DELIVERED);
+        long cancelled = orderRepository.countByStatus(com.kfpcl.entity.OrderStatus.CANCELLED);
+        long returned = 0;
 
         Map<String, Long> statusCounts = new HashMap<>();
         statusCounts.put("PENDING", pending);
@@ -144,12 +144,12 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         List<Order> latestOrders = orderRepository.findAll(PageRequest.of(0, 5, Sort.by("createdAt").descending())).getContent();
         return latestOrders.stream()
                 .map(o -> LatestSaleDto.builder()
-                        .orderId(o.getId())
+                        .orderId(String.valueOf(o.getId()))
                         .orderNumber(o.getOrderNumber())
-                        .customerName(o.getBuyerName() != null ? o.getBuyerName() : "Customer " + o.getBuyerId())
-                        .sellerName(o.getSellerName() != null ? o.getSellerName() : "Verified Supplier")
-                        .amount(o.getFinalAmount())
-                        .status(o.getOrderStatus().name())
+                        .customerName(o.getBuyerId() != null ? o.getBuyerId() : "Customer " + o.getBuyerId())
+                        .sellerName(o.getSellerId() != null ? o.getSellerId() : "Verified Supplier")
+                        .amount(o.getGrandTotal() != null ? o.getGrandTotal().doubleValue() : 0.0)
+                        .status(o.getStatus() != null ? o.getStatus().name() : "PENDING")
                         .timestamp(o.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());

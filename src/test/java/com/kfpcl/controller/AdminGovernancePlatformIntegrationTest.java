@@ -240,34 +240,30 @@ class AdminGovernancePlatformIntegrationTest {
     @Test
     @DisplayName("Admin Orders - Lifecycle, Tracking and Export")
     void testAdminOrdersFlow() throws Exception {
-        String orderId = "ord_test_" + System.currentTimeMillis() + "_" + java.util.UUID.randomUUID().toString().substring(0, 8);
         Order order = Order.builder()
-                .id(orderId)
                 .orderNumber("KFP-ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 8))
                 .buyerId(buyerUser.getId())
-                .buyerName(buyerUser.getName())
                 .sellerId(sellerUser.getId())
-                .sellerName(sellerUser.getName())
-                .totalAmount(5000.0)
-                .discountAmount(200.0)
-                .taxAmount(100.0)
-                .finalAmount(4900.0)
-                .paymentStatus(Order.PaymentStatus.PAID)
-                .orderStatus(Order.OrderStatus.PENDING)
-                .region("South Zone")
+                .subtotal(new java.math.BigDecimal("5000.00"))
+                .tax(new java.math.BigDecimal("100.00"))
+                .shippingCost(new java.math.BigDecimal("0.00"))
+                .grandTotal(new java.math.BigDecimal("4900.00"))
+                .paymentStatus("PAID")
+                .status(com.kfpcl.entity.OrderStatus.CREATED)
                 .build();
         orderRepository.save(order);
+        String orderId = String.valueOf(order.getId());
 
         // 1. Get Order Details
         mockMvc.perform(get("/api/v1/admin/orders/" + orderId)
 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.finalAmount").value(4900.0));
+                .andExpect(jsonPath("$.data.grandTotal").value(4900.0));
 
         // 2. Update Order Status
         OrderStatusUpdateDto statusDto = OrderStatusUpdateDto.builder()
-                .status("SHIPPED")
-                .remarks("Dispatched via cold chain freight")
+                .status(com.kfpcl.entity.OrderStatus.SHIPPED)
+                .trackingNo("TRACK-123")
                 .build();
 
         mockMvc.perform(patch("/api/v1/admin/orders/" + orderId + "/status")
@@ -275,7 +271,7 @@ class AdminGovernancePlatformIntegrationTest {
                         .content(objectMapper.writeValueAsString(statusDto))
 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.orderStatus").value("SHIPPED"));
+                .andExpect(jsonPath("$.data.status").value("SHIPPED"));
 
         // 3. Add Tracking
         OrderTrackingCreateDto trackingDto = OrderTrackingCreateDto.builder()
