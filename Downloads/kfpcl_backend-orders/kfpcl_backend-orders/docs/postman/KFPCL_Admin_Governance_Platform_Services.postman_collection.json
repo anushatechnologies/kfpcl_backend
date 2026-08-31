@@ -1,0 +1,1079 @@
+{
+	"info": {
+		"_postman_id": "8f3b6140-5a78-43e9-9231-kfpcl-dev6-admin",
+		"name": "KFPCL B2B Marketplace — Developer 6 Admin, Governance & Platform Services",
+		"description": "Comprehensive Postman Collection covering all 17 Admin, Governance, and Platform Services modules for KFPCL B2B Marketplace.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{admin_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "1. Admin Authentication",
+			"item": [
+				{
+					"name": "Admin Login (Success)",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@kfpcl.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Admin Login (Invalid Credentials - 401)",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@kfpcl.com\",\n  \"password\": \"wrongpass\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "auth", "refresh"]
+						}
+					}
+				},
+				{
+					"name": "Get Current Admin (Me)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Admin Logout",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Admin Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Summary",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/dashboard/summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard", "summary"]
+						}
+					}
+				},
+				{
+					"name": "Get Sales Overview",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/dashboard/sales-overview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard", "sales-overview"]
+						}
+					}
+				},
+				{
+					"name": "Get Order Status Breakdown",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/dashboard/order-status-breakdown",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard", "order-status-breakdown"]
+						}
+					}
+				},
+				{
+					"name": "Get Top Regions",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/dashboard/top-regions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard", "top-regions"]
+						}
+					}
+				},
+				{
+					"name": "Get Latest Sales",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/dashboard/latest-sales",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard", "latest-sales"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Admin Users & Roles",
+			"item": [
+				{
+					"name": "List Users (Paginated & Filtered)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/users?role=BUYER&page=0&limit=10&status=ACTIVE",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "users"],
+							"query": [
+								{ "key": "role", "value": "BUYER" },
+								{ "key": "page", "value": "0" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "status", "value": "ACTIVE" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/users/{{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "users", "{{test_user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update User Status (ACTIVE/INACTIVE/SUSPENDED)",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\",\n  \"reason\": \"KYC verification verified\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/users/{{test_user_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "users", "{{test_user_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Update User Primary Role",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"BUYER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/users/{{test_user_id}}/role",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "users", "{{test_user_id}}", "role"]
+						}
+					}
+				},
+				{
+					"name": "Assign Role to User",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{test_user_id}}\",\n  \"role\": \"ADMIN_PRODUCTS_APPROVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/roles/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "roles", "users"]
+						}
+					}
+				},
+				{
+					"name": "Get User Assigned Roles",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/roles/users?userId={{test_user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "roles", "users"],
+							"query": [ { "key": "userId", "value": "{{test_user_id}}" } ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Sellers & Seller Verification",
+			"item": [
+				{
+					"name": "List All Sellers",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers"],
+							"query": [ { "key": "page", "value": "0" }, { "key": "size", "value": "10" } ]
+						}
+					}
+				},
+				{
+					"name": "List Seller Applications",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/applications?status=PENDING",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "applications"],
+							"query": [ { "key": "status", "value": "PENDING" } ]
+						}
+					}
+				},
+				{
+					"name": "Get Seller Application By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/applications/{{test_app_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "applications", "{{test_app_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Approve Seller Application",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Documents verified successfully\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/applications/{{test_app_id}}/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "applications", "{{test_app_id}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "Reject Seller Application",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Invalid GSTIN or missing trade license\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/applications/{{test_app_id}}/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "applications", "{{test_app_id}}", "reject"]
+						}
+					}
+				},
+				{
+					"name": "List Seller Stores",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/stores?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "stores"]
+						}
+					}
+				},
+				{
+					"name": "Get Seller Verification Info",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/sellers/{{test_seller_id}}/verification",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "sellers", "{{test_seller_id}}", "verification"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Buyers",
+			"item": [
+				{
+					"name": "List Buyers",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/buyers?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "buyers"]
+						}
+					}
+				},
+				{
+					"name": "Get Buyer Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/buyers/{{test_buyer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "buyers", "{{test_buyer_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Buyer Activity Log",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/buyers/{{test_buyer_id}}/activity",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "buyers", "{{test_buyer_id}}", "activity"]
+						}
+					}
+				},
+				{
+					"name": "Update Buyer Status",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ACTIVE\",\n  \"reason\": \"Buyer verified\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/buyers/{{test_buyer_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "buyers", "{{test_buyer_id}}", "status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Catalog Product Approvals",
+			"item": [
+				{
+					"name": "List Pending Product Approvals",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/product-approvals?status=PENDING&page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "product-approvals"],
+							"query": [ { "key": "status", "value": "PENDING" } ]
+						}
+					}
+				},
+				{
+					"name": "Get Product Approval Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/product-approvals/{{test_product_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "product-approvals", "{{test_product_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Approve Product",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Complies with quality specifications\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/product-approvals/{{test_product_id}}/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "product-approvals", "{{test_product_id}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "Reject Product",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Missing certification certificate\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/product-approvals/{{test_product_id}}/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "product-approvals", "{{test_product_id}}", "reject"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Brand Registry",
+			"item": [
+				{
+					"name": "List Brands",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/brands?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "brands"]
+						}
+					}
+				},
+				{
+					"name": "Create Brand",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"KFPCL Gold Agro\",\n  \"logoUrl\": \"https://cdn/logo.png\",\n  \"website\": \"https://kfpclgold.com\",\n  \"description\": \"Premium certified produce\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/brands",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "brands"]
+						}
+					}
+				},
+				{
+					"name": "Get Brand By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/brands/{{test_brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "brands", "{{test_brand_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Brand",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/brands/{{test_brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "brands", "{{test_brand_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Brand",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/catalog/brands/{{test_brand_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "catalog", "brands", "{{test_brand_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Admin Orders",
+			"item": [
+				{
+					"name": "List Orders (Paginated & Filtered)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/orders?page=0&size=10&status=PENDING",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "orders"],
+							"query": [ { "key": "page", "value": "0" }, { "key": "status", "value": "PENDING" } ]
+						}
+					}
+				},
+				{
+					"name": "Get Order Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/orders/{{test_order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "orders", "{{test_order_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"SHIPPED\",\n  \"remarks\": \"Dispatched via cold logistics freight\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/orders/{{test_order_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "orders", "{{test_order_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Add Order Tracking",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"carrier\": \"KFPCL Logistics\",\n  \"trackingNumber\": \"KFP-TRK-9901\",\n  \"status\": \"Out for Delivery\",\n  \"location\": \"Hub 3 Bangalore\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/orders/{{test_order_id}}/tracking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "orders", "{{test_order_id}}", "tracking"]
+						}
+					}
+				},
+				{
+					"name": "Export Orders CSV",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/orders/export",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "orders", "export"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "9. RFQ & Quotations",
+			"item": [
+				{
+					"name": "List RFQs",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/rfqs?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "rfqs"]
+						}
+					}
+				},
+				{
+					"name": "Get RFQ By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/rfqs/{{test_rfq_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "rfqs", "{{test_rfq_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Quotations For RFQ",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/rfqs/{{test_rfq_id}}/quotations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "rfqs", "{{test_rfq_id}}", "quotations"]
+						}
+					}
+				},
+				{
+					"name": "List All Quotations",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/quotations?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "quotations"]
+						}
+					}
+				},
+				{
+					"name": "Get Quotation Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/quotations/{{test_quotation_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "quotations", "{{test_quotation_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Reviews & Moderation",
+			"item": [
+				{
+					"name": "List Reviews For Moderation (Admin)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/reviews?status=PENDING&page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "reviews"],
+							"query": [ { "key": "status", "value": "PENDING" } ]
+						}
+					}
+				},
+				{
+					"name": "Update Review Moderation Status (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/reviews/{{test_review_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "reviews", "{{test_review_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Create Product Review (Buyer)",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent grain quality, prompt dispatch!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/products/{{test_product_id}}/reviews",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "products", "{{test_product_id}}", "reviews"]
+						}
+					}
+				},
+				{
+					"name": "Get Approved Product Reviews (Public)",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/products/{{test_product_id}}/reviews?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "products", "{{test_product_id}}", "reviews"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Support Tickets",
+			"item": [
+				{
+					"name": "Create Support Ticket (User)",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Payment Escrow Inquiry\",\n  \"description\": \"Inquiry regarding payout cycle for order #9921\",\n  \"category\": \"Billing\",\n  \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/support/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "support", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "List Tickets (Admin)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/support/tickets?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "support", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "Get Ticket By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/support/tickets/{{test_ticket_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "support", "tickets", "{{test_ticket_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Reply to Ticket",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Payouts are released within T+2 settlement cycle.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/support/tickets/{{test_ticket_id}}/reply",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "support", "tickets", "{{test_ticket_id}}", "reply"]
+						}
+					}
+				},
+				{
+					"name": "Update Ticket Status (OPEN/IN_PROGRESS/RESOLVED)",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"RESOLVED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/support/tickets/{{test_ticket_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "support", "tickets", "{{test_ticket_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Update Ticket Priority",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"priority\": \"URGENT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/support/tickets/{{test_ticket_id}}/priority",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "support", "tickets", "{{test_ticket_id}}", "priority"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Platform Notifications",
+			"item": [
+				{
+					"name": "Create Notification",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Platform Scheduled Maintenance\",\n  \"message\": \"System maintenance scheduled tonight from 1 AM to 3 AM IST.\",\n  \"audience\": \"ALL\",\n  \"channels\": \"IN_APP,SMS\",\n  \"status\": \"SCHEDULED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/notifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "notifications"]
+						}
+					}
+				},
+				{
+					"name": "List Notifications",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/notifications?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "notifications"]
+						}
+					}
+				},
+				{
+					"name": "Dispatch Notification",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/notifications/{{test_notification_id}}/send",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "notifications", "{{test_notification_id}}", "send"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Notification",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/notifications/{{test_notification_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "notifications", "{{test_notification_id}}", "cancel"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Analytics",
+			"item": [
+				{
+					"name": "Get Analytics Overview (by day/week/month)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/analytics/overview?groupBy=day",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "analytics", "overview"],
+							"query": [ { "key": "groupBy", "value": "day" } ]
+						}
+					}
+				},
+				{
+					"name": "Get Sales Analytics",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/analytics/sales",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "analytics", "sales"]
+						}
+					}
+				},
+				{
+					"name": "Get Product Analytics",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/analytics/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "analytics", "products"]
+						}
+					}
+				},
+				{
+					"name": "Get User Analytics",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/analytics/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "analytics", "users"]
+						}
+					}
+				},
+				{
+					"name": "Get Region Analytics",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/analytics/regions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "analytics", "regions"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "14. Admin Profile & Settings",
+			"item": [
+				{
+					"name": "Get Admin Profile",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Admin Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Super Administrator\",\n  \"phone\": \"+91-9999900001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Platform Settings",
+					"request": {
+						"method": "PATCH",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"settings\": {\n    \"siteName\": \"KFPCL B2B Marketplace\",\n    \"commissionRate\": \"2.5%\",\n    \"escrowHoldingDays\": \"5\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "15. Audit Logs",
+			"item": [
+				{
+					"name": "List Audit Logs",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/audit-logs?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "audit-logs"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "16. Shared Messaging & Conversations",
+			"item": [
+				{
+					"name": "List Conversations",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/conversations?page=0&size=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "conversations"]
+						}
+					}
+				},
+				{
+					"name": "Create Conversation",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientId\": \"{{test_user_id}}\",\n  \"subject\": \"Contract discussion\",\n  \"message\": \"Hello, let us discuss delivery schedule.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "conversations"]
+						}
+					}
+				},
+				{
+					"name": "Get Conversation Messages",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/conversations/{{test_conversation_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "conversations", "{{test_conversation_id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Send Message in Conversation",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Content-Type", "value": "application/json" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Order #9921 has been packed and scheduled for dispatch.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/conversations/{{test_conversation_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "conversations", "{{test_conversation_id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Mark Conversation as Read",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/api/v1/conversations/{{test_conversation_id}}/read",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "conversations", "{{test_conversation_id}}", "read"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:8080" },
+		{ "key": "admin_token", "value": "valid_token" },
+		{ "key": "refresh_token", "value": "sample_refresh_token" },
+		{ "key": "test_user_id", "value": "user_buyer_test_1" },
+		{ "key": "test_seller_id", "value": "user_seller_test_1" },
+		{ "key": "test_app_id", "value": "app_sample_1" },
+		{ "key": "test_buyer_id", "value": "user_buyer_test_1" },
+		{ "key": "test_product_id", "value": "prod_gov_test_1" },
+		{ "key": "test_brand_id", "value": "brand_organic_india_test" },
+		{ "key": "test_order_id", "value": "ord_sample_1" },
+		{ "key": "test_rfq_id", "value": "rfq_sample_1" },
+		{ "key": "test_quotation_id", "value": "quot_sample_1" },
+		{ "key": "test_review_id", "value": "rev_sample_1" },
+		{ "key": "test_ticket_id", "value": "tkt_sample_1" },
+		{ "key": "test_notification_id", "value": "notif_sample_1" },
+		{ "key": "test_conversation_id", "value": "conv_sample_1" }
+	]
+}
