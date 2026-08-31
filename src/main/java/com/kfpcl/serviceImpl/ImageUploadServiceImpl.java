@@ -13,8 +13,13 @@ import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -29,13 +34,16 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
     private final String bucket;
     private final String region;
 
     public ImageUploadServiceImpl(S3Client s3Client,
+                                  S3Presigner s3Presigner,
                                   @Value("${aws.s3.bucket}") String bucket,
                                   @Value("${aws.s3.region}") String region) {
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
         this.bucket = bucket;
         this.region = region;
     }
@@ -105,6 +113,38 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         }
     }
 
+    @Override
+    public String generatePresignedUrl(String storedUrl) {
+        if (!StringUtils.hasText(storedUrl)) {
+            return storedUrl;
+        }
+        
+        String key = extractOwnedKey(storedUrl);
+        if (key == null) {
+            // It's not a URL from our bucket (e.g. old local /uploads/ URL)
+            return storedUrl;
+        }
+        
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+
+            GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofHours(1))
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            PresignedGetObjectRequest presignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest);
+            return presignedGetObjectRequest.url().toString();
+        } catch (SdkException ex) {
+            // Fallback to original url on failure
+            return storedUrl;
+        }
+    }
+
+
     private ImageUploadResponseDto uploadMultipart(MultipartFile file, String prefix) {
         // Removed empty file check to allow uploads with empty content (e.g., tests).
         // The file may be empty; we'll still generate a key and upload zero‑byte content to S3.
@@ -153,6 +193,9 @@ public class ImageUploadServiceImpl implements ImageUploadService {
             return fileUrl.substring(prefix.length());
         }
         if (!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
+            if (fileUrl.startsWith("/uploads/")) {
+                return null; // Local upload path, not S3 key
+            }
             return fileUrl;
         }
         return null;

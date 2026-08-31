@@ -7,6 +7,7 @@ import com.kfpcl.repository.MessageAttachmentRepository;
 import com.kfpcl.repository.MessageRepository;
 import com.kfpcl.repository.UserRepository;
 import com.kfpcl.serviceImpl.ConversationServiceImpl;
+import com.kfpcl.util.ImageUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +28,7 @@ class ConversationAttachmentPersistenceTest {
     @Mock private MessageAttachmentRepository messageAttachmentRepository;
     @Mock private UserRepository userRepository;
     @Mock private ImageUploadService imageUploadService;
+    @Mock private ImageUtils imageUtils;
     @InjectMocks private ConversationServiceImpl conversationService;
 
     @Test
@@ -37,6 +39,7 @@ class ConversationAttachmentPersistenceTest {
                         .fileUrl("conversations/conv_123/a.jpg")
                         .imageKey("conversations/conv_123/a.jpg")
                         .fileSize(12).contentType("image/jpeg").build());
+        when(imageUtils.generatePresignedUrl(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         when(messageAttachmentRepository.save(any(MessageAttachment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         conversationService.uploadAttachment("conv_123", new MockMultipartFile(

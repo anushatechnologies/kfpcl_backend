@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,8 +26,11 @@ class ImageUploadServiceImplTest {
     @Mock
     private S3Client s3Client;
 
+    @Mock
+    private S3Presigner s3Presigner;
+
     private ImageUploadServiceImpl service() {
-        return new ImageUploadServiceImpl(s3Client, "kfpcl-backend-images-2026", "ap-south-1");
+        return new ImageUploadServiceImpl(s3Client, s3Presigner, "kfpcl-backend-images-2026", "ap-south-1");
     }
 
     @Test

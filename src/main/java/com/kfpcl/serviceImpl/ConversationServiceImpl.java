@@ -12,6 +12,7 @@ import com.kfpcl.repository.MessageRepository;
 import com.kfpcl.repository.UserRepository;
 import com.kfpcl.service.ConversationService;
 import com.kfpcl.service.ImageUploadService;
+import com.kfpcl.util.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +38,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final MessageAttachmentRepository messageAttachmentRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional(readOnly = true)
@@ -135,7 +137,7 @@ public class ConversationServiceImpl implements ConversationService {
                 MessageAttachment attachment = MessageAttachment.builder()
                         .id("att_" + UUID.randomUUID().toString().substring(0, 8))
                         .messageId(saved.getId())
-                        .fileUrl(att.getFileUrl())
+                        .fileUrl(imageUtils.generatePresignedUrl(att.getFileUrl()))
                         .fileName(att.getFileName())
                         .fileType(att.getFileType())
                         .fileSize(att.getFileSize())
@@ -171,7 +173,7 @@ public class ConversationServiceImpl implements ConversationService {
         MessageAttachment attachment = MessageAttachment.builder()
                 .id("att_" + UUID.randomUUID().toString().substring(0, 8))
                 .messageId("msg_pending")
-                .fileUrl(upload.getFileUrl())
+                .fileUrl(imageUtils.generatePresignedUrl(upload.getFileUrl()))
                 .fileName(upload.getFileName())
                 .fileType(file.getContentType())
                 .fileSize(file.getSize())
@@ -181,7 +183,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         return MessageAttachmentDto.builder()
                 .id(saved.getId())
-                .fileUrl(saved.getFileUrl())
+                .fileUrl(imageUtils.generatePresignedUrl(saved.getFileUrl()))
                 .fileName(saved.getFileName())
                 .fileType(saved.getFileType())
                 .fileSize(saved.getFileSize())
@@ -207,7 +209,7 @@ public class ConversationServiceImpl implements ConversationService {
         List<MessageAttachmentDto> attachments = messageAttachmentRepository.findByMessageId(msg.getId()).stream()
                 .map(a -> MessageAttachmentDto.builder()
                         .id(a.getId())
-                        .fileUrl(a.getFileUrl())
+                        .fileUrl(imageUtils.generatePresignedUrl(a.getFileUrl()))
                         .fileName(a.getFileName())
                         .fileType(a.getFileType())
                         .fileSize(a.getFileSize())

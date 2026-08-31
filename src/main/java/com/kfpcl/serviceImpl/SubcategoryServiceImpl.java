@@ -242,7 +242,7 @@ public class SubcategoryServiceImpl implements SubcategoryService {
                 .categoryId(subcategory.getCategoryId())
                 .categoryName(categoryName)
                 .name(subcategory.getName())
-                .imageUrl(subcategory.getImageUrl())
+                .imageUrl(imageUtils.generatePresignedUrl(subcategory.getImageUrl()))
                 .description(subcategory.getDescription())
                 .displayOrder(subcategory.getDisplayOrder())
                 .discount(subcategory.getDiscount())

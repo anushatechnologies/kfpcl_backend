@@ -17,4 +17,7 @@ public interface ImageUploadService {
     ImageUploadResponseDto uploadCategoryImage(MultipartFile file);
     ImageUploadResponseDto uploadSubcategoryImage(MultipartFile file);
     ImageUploadResponseDto uploadProductImage(MultipartFile file);
+
+    // Presigned URL generation
+    String generatePresignedUrl(String storedUrl);
 }

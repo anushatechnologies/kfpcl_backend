@@ -8,6 +8,7 @@ import com.kfpcl.exception.ResourceNotFoundException;
 import com.kfpcl.repository.FavoriteRepository;
 import com.kfpcl.repository.ProductRepository;
 import com.kfpcl.service.BuyerFavoriteService;
+import com.kfpcl.util.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ public class BuyerFavoriteServiceImpl implements BuyerFavoriteService {
 
     private final FavoriteRepository favoriteRepository;
     private final ProductRepository productRepository;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional
@@ -60,7 +62,7 @@ public class BuyerFavoriteServiceImpl implements BuyerFavoriteService {
                             .productId(fav.getProductId())
                             .productName(product != null ? product.getProductName() : "Unknown Product")
                             .price(product != null ? product.getPrice() : 0.0)
-                            .imageUrl(product != null ? product.getImageUrl() : null)
+                            .imageUrl(product != null ? imageUtils.generatePresignedUrl(product.getImageUrl()) : null)
                             .savedAt(fav.getCreatedAt())
                             .build();
                 })

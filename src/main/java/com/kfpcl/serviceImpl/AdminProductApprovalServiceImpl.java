@@ -13,6 +13,7 @@ import com.kfpcl.repository.ProductRepository;
 import com.kfpcl.repository.SubcategoryRepository;
 import com.kfpcl.service.AdminProductApprovalService;
 import com.kfpcl.service.AuditLogService;
+import com.kfpcl.util.ImageUtils;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,7 @@ public class AdminProductApprovalServiceImpl implements AdminProductApprovalServ
     private final CategoryRepository categoryRepository;
     private final SubcategoryRepository subcategoryRepository;
     private final AuditLogService auditLogService;
+    private final ImageUtils imageUtils;
 
     @Override
     @Transactional(readOnly = true)
@@ -126,7 +128,7 @@ public class AdminProductApprovalServiceImpl implements AdminProductApprovalServ
                 .subcategoryName(subName)
                 .brand(product.getBrand())
                 .description(product.getDescription())
-                .imageUrl(product.getImageUrl())
+                .imageUrl(imageUtils.generatePresignedUrl(product.getImageUrl()))
                 .price(product.getPrice())
                 .mrp(product.getMrp())
                 .sku(product.getSku())

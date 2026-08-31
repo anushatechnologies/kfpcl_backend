@@ -189,7 +189,7 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryResponseDto.builder()
                 .id(category.getId())
                 .name(category.getName())
-                .imageUrl(category.getImageUrl())
+                .imageUrl(imageUtils.generatePresignedUrl(category.getImageUrl()))
                 .description(category.getDescription())
                 .displayOrder(category.getDisplayOrder())
                 .discount(category.getDiscount())

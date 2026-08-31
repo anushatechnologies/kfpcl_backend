@@ -14,4 +14,8 @@ public class ImageUtils {
     public String processBase64Image(String imageUrl) {
         return imageUploadService.uploadBase64Image(imageUrl);
     }
+
+    public String generatePresignedUrl(String storedUrl) {
+        return imageUploadService.generatePresignedUrl(storedUrl);
+    }
 }

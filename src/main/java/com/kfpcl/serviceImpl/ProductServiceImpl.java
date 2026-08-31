@@ -770,7 +770,7 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryName(subcategoryName)
                 .brand(product.getBrand())
                 .description(product.getDescription())
-                .imageUrl(product.getImageUrl())
+                .imageUrl(imageUtils.generatePresignedUrl(product.getImageUrl()))
                 .price(product.getPrice())
                 .mrp(product.getMrp())
                 .quantity(product.getQuantity())
