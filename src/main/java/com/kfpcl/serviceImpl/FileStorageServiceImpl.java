@@ -6,12 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import com.kfpcl.service.ImageUploadService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,15 +14,10 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    private final Path uploadPath;
+    private final ImageUploadService imageUploadService;
 
-    public FileStorageServiceImpl(@Value("${file.upload.dir:uploads/catalog/}") String uploadDir) {
-        this.uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-        try {
-            Files.createDirectories(this.uploadPath);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not create upload directory", ex);
-        }
+    public FileStorageServiceImpl(ImageUploadService imageUploadService) {
+        this.imageUploadService = imageUploadService;
     }
 
     @Override
@@ -36,28 +26,17 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new IllegalArgumentException("Cannot store empty file");
         }
 
-        String originalFileName = file.getOriginalFilename();
-        String fileExtension = "";
-        if (originalFileName != null && originalFileName.contains(".")) {
-            fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        }
+        // Upload to S3 using the existing ImageUploadService
+        var s3Response = imageUploadService.uploadCatalogImage(file);
 
-        String storedFileName = UUID.randomUUID().toString() + fileExtension;
-        Path targetLocation = this.uploadPath.resolve(storedFileName);
-
-        try {
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            throw new RuntimeException("Could not store file " + originalFileName, ex);
-        }
-
-        String fileUrl = "/uploads/" + storedFileName;
+        // Generate the full presigned URL so the frontend can immediately display it
+        String fullUrl = imageUploadService.generatePresignedUrl(s3Response.getImageKey());
 
         return FileUploadResponseDto.builder()
-                .fileName(storedFileName)
-                .fileUrl(fileUrl)
-                .fileType(file.getContentType())
-                .size(file.getSize())
+                .fileName(s3Response.getFileName())
+                .fileUrl(fullUrl)
+                .fileType(s3Response.getContentType())
+                .size((long) s3Response.getFileSize())
                 .build();
     }
 
