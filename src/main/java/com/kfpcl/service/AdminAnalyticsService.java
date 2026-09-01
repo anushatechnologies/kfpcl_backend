@@ -15,4 +15,6 @@ public interface AdminAnalyticsService {
     Map<String, Object> getUserAnalytics();
 
     Map<String, Object> getRegionAnalytics();
+
+    String exportAnalytics(String format, String from, String to);
 }

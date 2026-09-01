@@ -3,6 +3,7 @@ package com.kfpcl.serviceImpl;
 import com.kfpcl.dto.AdminLoginDto;
 import com.kfpcl.dto.AdminLoginResponseDto;
 import com.kfpcl.dto.AdminProfileResponseDto;
+import com.kfpcl.dto.AdminRefreshDto;
 import com.kfpcl.entity.User;
 import com.kfpcl.entity.UserRole;
 import com.kfpcl.exception.UnauthorizedException;
@@ -190,12 +191,17 @@ public class AdminAuthServiceImpl implements AdminAuthService {
 
         auditLogService.logAction(user.getId(), "ROLE_ADMIN", "LOGIN", "AUTH", user.getId(), null, "SUCCESS", null, null);
 
+        String mockAccessToken = "mock-access-token-" + UUID.randomUUID().toString();
+        String mockRefreshToken = "mock-refresh-token-" + UUID.randomUUID().toString();
+
         return AdminLoginResponseDto.builder()
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .permissions(permissions)
+                .accessToken(mockAccessToken)
+                .refreshToken(mockRefreshToken)
                 .build();
     }
 
@@ -228,6 +234,35 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 .status(user.getStatus().name())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+    @Override
+    public AdminLoginResponseDto refresh(AdminRefreshDto dto) {
+        // In a real application, validate the refresh token and extract the user info.
+        // Here we mock the behavior by getting the current admin user.
+        User user = userRepository.findByEmail("admin@kfpcl.com")
+                .orElseThrow(() -> new UnauthorizedException("Admin user not found"));
+
+        List<String> permissions = userRoleRepository.findByUserId(user.getId()).stream()
+                .map(UserRole::getRole)
+                .collect(Collectors.toList());
+
+        if (permissions.isEmpty() || user.getEmail().equalsIgnoreCase("admin@kfpcl.com")) {
+            permissions = DEFAULT_ADMIN_PERMISSIONS;
+        }
+
+        String mockAccessToken = "mock-access-token-" + UUID.randomUUID().toString();
+        String mockRefreshToken = "mock-refresh-token-" + UUID.randomUUID().toString();
+
+        return AdminLoginResponseDto.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .permissions(permissions)
+                .accessToken(mockAccessToken)
+                .refreshToken(mockRefreshToken)
                 .build();
     }
 }

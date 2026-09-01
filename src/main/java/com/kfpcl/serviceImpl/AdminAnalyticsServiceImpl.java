@@ -91,4 +91,19 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
         map.put("warehouseCoverage", "95%");
         return map;
     }
+
+    @Override
+    public String exportAnalytics(String format, String from, String to) {
+        if (!"csv".equalsIgnoreCase(format)) {
+            throw new BusinessValidationException("Only CSV format is supported at this time.");
+        }
+        StringBuilder csv = new StringBuilder();
+        csv.append("Metric,Value\n");
+        csv.append("Total Revenue,").append(orderRepository.sumTotalRevenue() != null ? orderRepository.sumTotalRevenue() : 0.0).append("\n");
+        csv.append("Total Orders,").append(orderRepository.count()).append("\n");
+        csv.append("Total Users,").append(userRepository.count()).append("\n");
+        csv.append("Total Products,").append(productRepository.count()).append("\n");
+        csv.append("Exported Date,").append(java.time.LocalDate.now().toString()).append("\n");
+        return csv.toString();
+    }
 }

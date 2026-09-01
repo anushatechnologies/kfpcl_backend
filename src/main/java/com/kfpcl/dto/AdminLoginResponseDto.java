@@ -18,4 +18,6 @@ public class AdminLoginResponseDto {
     private String email;
     private String role;
     private List<String> permissions;
+    private String accessToken;
+    private String refreshToken;
 }

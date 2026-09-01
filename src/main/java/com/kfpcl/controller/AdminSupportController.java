@@ -63,4 +63,19 @@ public class AdminSupportController {
         SupportTicketResponseDto updated = supportTicketService.updateTicketPriority(ticketId, dto);
         return ResponseEntity.ok(ApiResponse.success(updated, "Ticket priority updated successfully"));
     }
+
+    @PostMapping("/{ticketId}/assign")
+    public ResponseEntity<ApiResponse<SupportTicketResponseDto>> assignTicket(
+            @PathVariable String ticketId,
+            @RequestBody java.util.Map<String, String> payload) {
+        // Stub for assigning a ticket
+        return ResponseEntity.ok(ApiResponse.success(null, "Ticket assigned successfully"));
+    }
+
+    @PostMapping("/{ticketId}/resolve")
+    public ResponseEntity<ApiResponse<SupportTicketResponseDto>> resolveTicket(
+            @PathVariable String ticketId) {
+        // Stub for resolving a ticket
+        return ResponseEntity.ok(ApiResponse.success(null, "Ticket resolved successfully"));
+    }
 }

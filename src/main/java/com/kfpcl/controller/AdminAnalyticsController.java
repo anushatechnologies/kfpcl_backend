@@ -52,4 +52,19 @@ public class AdminAnalyticsController {
         Map<String, Object> regions = analyticsService.getRegionAnalytics();
         return ResponseEntity.ok(ApiResponse.success(regions, "Region analytics retrieved successfully"));
     }
+
+    @GetMapping("/export")
+    public ResponseEntity<org.springframework.core.io.Resource> exportAnalytics(
+            @RequestParam(defaultValue = "csv") String format,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        
+        String csvData = analyticsService.exportAnalytics(format, from, to);
+        org.springframework.core.io.ByteArrayResource resource = new org.springframework.core.io.ByteArrayResource(csvData.getBytes());
+        
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"analytics_export.csv\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv"))
+                .body(resource);
+    }
 }

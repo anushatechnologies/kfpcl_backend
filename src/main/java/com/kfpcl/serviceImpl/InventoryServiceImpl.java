@@ -153,9 +153,9 @@ public class InventoryServiceImpl implements InventoryService {
 
         InventoryLog.AdjustmentType adjustmentType;
         try {
-            adjustmentType = InventoryLog.AdjustmentType.valueOf(dto.getAdjustmentType().toUpperCase().trim());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException("Invalid adjustmentType: " + dto.getAdjustmentType() + ". Allowed: ADD, SUBTRACT, SET, CORRECTION, DAMAGE, SALE, RETURN");
+            adjustmentType = InventoryLog.AdjustmentType.valueOf(dto.getType().toUpperCase().trim());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new InvalidRequestException("Invalid adjustmentType: " + dto.getType() + ". Allowed: ADD, SUBTRACT, SET, CORRECTION, DAMAGE, SALE, RETURN");
         }
 
         int previousQty = inventory.getStockQuantity();

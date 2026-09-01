@@ -32,4 +32,16 @@ public class AdminQuotationController {
         QuotationResponseDto quotation = adminQuotationService.getQuotationById(quotationId);
         return ResponseEntity.ok(ApiResponse.success(quotation, "Quotation details retrieved successfully"));
     }
+
+    @PostMapping("/{quotationId}/approve")
+    public ResponseEntity<ApiResponse<QuotationResponseDto>> approveQuotation(@PathVariable String quotationId) {
+        QuotationResponseDto quotation = adminQuotationService.approveQuotation(quotationId);
+        return ResponseEntity.ok(ApiResponse.success(quotation, "Quotation approved successfully"));
+    }
+
+    @PostMapping("/{quotationId}/reject")
+    public ResponseEntity<ApiResponse<QuotationResponseDto>> rejectQuotation(@PathVariable String quotationId) {
+        QuotationResponseDto quotation = adminQuotationService.rejectQuotation(quotationId);
+        return ResponseEntity.ok(ApiResponse.success(quotation, "Quotation rejected successfully"));
+    }
 }

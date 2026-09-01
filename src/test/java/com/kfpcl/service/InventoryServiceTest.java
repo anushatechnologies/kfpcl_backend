@@ -87,7 +87,7 @@ class InventoryServiceTest {
     @DisplayName("Adjust Stock - Subtract Success")
     void testAdjustStock_SubtractSuccess() {
         InventoryAdjustmentDto dto = InventoryAdjustmentDto.builder()
-                .adjustmentType("SUBTRACT")
+                .type("SUBTRACT")
                 .quantity(20)
                 .reason("Damaged during transit")
                 .adjustedBy("Admin")
@@ -109,7 +109,7 @@ class InventoryServiceTest {
     @DisplayName("Adjust Stock - Insufficient Stock Throws BusinessValidationException")
     void testAdjustStock_InsufficientStock() {
         InventoryAdjustmentDto dto = InventoryAdjustmentDto.builder()
-                .adjustmentType("SUBTRACT")
+                .type("SUBTRACT")
                 .quantity(100) // Available is only 50
                 .reason("Large withdrawal")
                 .build();

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.kfpcl.dto.AdminRefreshDto;
 
 @RestController
 @RequestMapping("/api/v1/admin/auth")
@@ -27,6 +28,12 @@ public class AdminAuthController {
     public ResponseEntity<ApiResponse<Void>> logout() {
         adminAuthService.logout();
         return ResponseEntity.ok(ApiResponse.success(null, "Admin logged out successfully"));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AdminLoginResponseDto>> refresh(@Valid @RequestBody AdminRefreshDto dto) {
+        AdminLoginResponseDto response = adminAuthService.refresh(dto);
+        return ResponseEntity.ok(ApiResponse.success(response, "Token refreshed successfully"));
     }
 
     @GetMapping("/me")

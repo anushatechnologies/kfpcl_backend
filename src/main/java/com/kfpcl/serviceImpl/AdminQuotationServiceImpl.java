@@ -58,6 +58,24 @@ public class AdminQuotationServiceImpl implements AdminQuotationService {
         return mapToDto(quotation);
     }
 
+    @Override
+    public QuotationResponseDto approveQuotation(String quotationId) {
+        Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation", "quotationId", quotationId));
+        quotation.setStatus(Quotation.Status.ACCEPTED);
+        quotation = quotationRepository.save(quotation);
+        return mapToDto(quotation);
+    }
+
+    @Override
+    public QuotationResponseDto rejectQuotation(String quotationId) {
+        Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quotation", "quotationId", quotationId));
+        quotation.setStatus(Quotation.Status.REJECTED);
+        quotation = quotationRepository.save(quotation);
+        return mapToDto(quotation);
+    }
+
     private QuotationResponseDto mapToDto(Quotation q) {
         return QuotationResponseDto.builder()
                 .id(q.getId())

@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InventoryAdjustmentDto {
 
-    @NotBlank(message = "adjustmentType is required (ADD, SUBTRACT, SET, CORRECTION, DAMAGE, SALE, RETURN)")
-    private String adjustmentType;
+    @NotBlank(message = "type is required (ADD, SUBTRACT, SET, CORRECTION, DAMAGE, SALE, RETURN)")
+    private String type;
 
     @NotNull(message = "quantity is required")
     @Min(value = 0, message = "quantity must be 0 or greater")
