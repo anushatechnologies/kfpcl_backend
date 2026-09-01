@@ -41,7 +41,7 @@ public class Product {
     @Column(name = "description", length = 2000)
     private String description;
 
-    @Column(name = "image_url", length = 800)
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Column(name = "price", nullable = false)
