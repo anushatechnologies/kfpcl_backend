@@ -35,6 +35,8 @@ public class SellerProductCreateDto {
     private String description;
 
     private String imageUrl;
+    private String regionOfOrigin;
+    private String countryOfOrigin;
 
     @NotNull(message = "price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")

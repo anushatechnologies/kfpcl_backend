@@ -23,6 +23,8 @@ public class ProductResponseDto {
     private String brand;
     private String description;
     private String imageUrl;
+    private String regionOfOrigin;
+    private String countryOfOrigin;
     private Double price;
     private Double mrp;
     private Double quantity;

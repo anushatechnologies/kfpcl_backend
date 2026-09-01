@@ -44,6 +44,12 @@ public class Product {
     @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
+    @Column(name = "region_of_origin", length = 150)
+    private String regionOfOrigin;
+
+    @Column(name = "country_of_origin", length = 150)
+    private String countryOfOrigin;
+
     @Column(name = "price", nullable = false)
     private Double price;
 

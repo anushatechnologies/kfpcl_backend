@@ -23,7 +23,7 @@ public class MessageAttachment {
     @Column(name = "message_id", nullable = false, length = 64)
     private String messageId;
 
-    @Column(name = "file_url", nullable = false, length = 500)
+    @Column(name = "file_url", nullable = false, columnDefinition = "LONGTEXT")
     private String fileUrl;
 
     @Column(name = "file_name", length = 200)

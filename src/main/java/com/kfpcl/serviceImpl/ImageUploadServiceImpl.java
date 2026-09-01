@@ -77,8 +77,12 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
     @Override
     public String uploadBase64Image(String imageDataUri) {
-        if (!StringUtils.hasText(imageDataUri) || !imageDataUri.startsWith("data:image/")) {
+        if (!StringUtils.hasText(imageDataUri)) {
             return imageDataUri;
+        }
+        if (!imageDataUri.startsWith("data:image/")) {
+            String key = extractOwnedKey(imageDataUri);
+            return key != null ? key : imageDataUri;
         }
         int marker = imageDataUri.indexOf(";base64,");
         if (marker < 0) {
@@ -188,18 +192,44 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     }
 
     private String extractOwnedKey(String fileUrl) {
-        String prefix = "https://" + bucket + ".s3." + region + ".amazonaws.com/";
-        if (fileUrl.startsWith(prefix)) {
-            String keyWithParams = fileUrl.substring(prefix.length());
-            int queryIndex = keyWithParams.indexOf('?');
-            return queryIndex > 0 ? keyWithParams.substring(0, queryIndex) : keyWithParams;
+        if (!StringUtils.hasText(fileUrl)) {
+            return null;
         }
-        if (!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
-            if (fileUrl.startsWith("/uploads/")) {
+        
+        int queryIndex = fileUrl.indexOf('?');
+        String cleanUrl = queryIndex > 0 ? fileUrl.substring(0, queryIndex) : fileUrl;
+
+        if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+            if (cleanUrl.startsWith("/uploads/")) {
                 return null; // Local upload path, not S3 key
             }
-            return fileUrl;
+            return cleanUrl;
         }
+
+        // Virtual-hosted style: https://<bucket>.s3.<region>.amazonaws.com/<key>
+        String vhPrefix1 = "https://" + bucket + ".s3." + region + ".amazonaws.com/";
+        if (cleanUrl.startsWith(vhPrefix1)) {
+            return cleanUrl.substring(vhPrefix1.length());
+        }
+        String vhPrefix2 = "https://" + bucket + ".s3.amazonaws.com/";
+        if (cleanUrl.startsWith(vhPrefix2)) {
+            return cleanUrl.substring(vhPrefix2.length());
+        }
+        String vhPrefix3 = "https://" + bucket + ".s3-" + region + ".amazonaws.com/";
+        if (cleanUrl.startsWith(vhPrefix3)) {
+            return cleanUrl.substring(vhPrefix3.length());
+        }
+
+        // Path-style: https://s3.<region>.amazonaws.com/<bucket>/<key>
+        String pathStyle1 = "https://s3." + region + ".amazonaws.com/" + bucket + "/";
+        if (cleanUrl.startsWith(pathStyle1)) {
+            return cleanUrl.substring(pathStyle1.length());
+        }
+        String pathStyle2 = "https://s3.amazonaws.com/" + bucket + "/";
+        if (cleanUrl.startsWith(pathStyle2)) {
+            return cleanUrl.substring(pathStyle2.length());
+        }
+
         return null;
     }
 

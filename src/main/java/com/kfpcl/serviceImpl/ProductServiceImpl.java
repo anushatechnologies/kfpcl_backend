@@ -191,6 +191,8 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryId(subcategory.getId())
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
+                .regionOfOrigin(dto.getRegionOfOrigin())
+                .countryOfOrigin(dto.getCountryOfOrigin())
                 .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .quantity(dto.getQuantity())
                 .unit(dto.getUnit())
@@ -346,6 +348,8 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryId(subcategory.getId())
                 .brand(dto.getBrand())
                 .description(dto.getDescription())
+                .regionOfOrigin(dto.getRegionOfOrigin())
+                .countryOfOrigin(dto.getCountryOfOrigin())
                 .imageUrl(imageUtils.processBase64Image(dto.getImageUrl()))
                 .quantity(dto.getQuantity())
                 .unit(dto.getUnit())
@@ -580,6 +584,12 @@ public class ProductServiceImpl implements ProductService {
         if (dto.getDescription() != null) {
             product.setDescription(dto.getDescription());
         }
+        if (dto.getRegionOfOrigin() != null) {
+            product.setRegionOfOrigin(dto.getRegionOfOrigin());
+        }
+        if (dto.getCountryOfOrigin() != null) {
+            product.setCountryOfOrigin(dto.getCountryOfOrigin());
+        }
         if (dto.getImageUrl() != null) {
             product.setImageUrl(imageUtils.processBase64Image(dto.getImageUrl()));
         }
@@ -770,6 +780,8 @@ public class ProductServiceImpl implements ProductService {
                 .subcategoryName(subcategoryName)
                 .brand(product.getBrand())
                 .description(product.getDescription())
+                .regionOfOrigin(product.getRegionOfOrigin())
+                .countryOfOrigin(product.getCountryOfOrigin())
                 .imageUrl(imageUtils.generatePresignedUrl(product.getImageUrl()))
                 .price(product.getPrice())
                 .mrp(product.getMrp())
