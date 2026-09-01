@@ -43,11 +43,28 @@ public class BuyerRfqServiceImpl implements BuyerRfqService {
     @Override
     @Transactional
     public RfqResponseDto createRfq(String buyerId, RfqCreateRequest request) {
-        User buyer = userRepository.findById(buyerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
+        String effectiveBuyerId = (buyerId != null && !buyerId.trim().isEmpty()) ? buyerId.trim() : "buyer-999";
 
-        String productName = "General RFQ";
-        if (request.getProductId() != null) {
+        User buyer = userRepository.findById(effectiveBuyerId)
+                .or(() -> userRepository.findByEmail(effectiveBuyerId))
+                .orElseGet(() -> {
+                    String email = effectiveBuyerId.contains("@") ? effectiveBuyerId : effectiveBuyerId + "@kfpcl.com";
+                    String name = effectiveBuyerId.contains("@") ? effectiveBuyerId.split("@")[0] : "Buyer (" + effectiveBuyerId + ")";
+                    User newUser = User.builder()
+                            .id(effectiveBuyerId)
+                            .name(name)
+                            .email(email)
+                            .role(User.Role.BUYER)
+                            .status(User.Status.ACTIVE)
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        String productName = (request.getTitle() != null && !request.getTitle().trim().isEmpty())
+                ? request.getTitle().trim()
+                : "General RFQ";
+
+        if (request.getProductId() != null && !request.getProductId().trim().isEmpty()) {
             Product p = productRepository.findById(request.getProductId()).orElse(null);
             if (p != null) {
                 productName = p.getProductName();
@@ -57,14 +74,14 @@ public class BuyerRfqServiceImpl implements BuyerRfqService {
         Rfq rfq = Rfq.builder()
                 .id(UUID.randomUUID().toString())
                 .rfqNumber("RFQ-" + System.currentTimeMillis())
-                .buyerId(buyerId)
+                .buyerId(buyer.getId())
                 .buyerName(buyer.getName())
                 .productId(request.getProductId())
                 .productName(productName)
-                .title(request.getTitle())
+                .title(request.getTitle() != null ? request.getTitle() : productName)
                 .categoryId(request.getCategoryId())
                 .specifications(request.getSpecifications())
-                .quantity(request.getQuantity())
+                .quantity(request.getQuantity() != null ? request.getQuantity() : 1)
                 .targetPrice(request.getTargetPrice())
                 .deliveryLocation(request.getDeliveryLocation())
                 .deadline(request.getRequiredDeliveryDate())
