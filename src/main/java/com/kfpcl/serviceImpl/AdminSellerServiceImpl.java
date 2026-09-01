@@ -84,18 +84,28 @@ public class AdminSellerServiceImpl implements AdminSellerService {
     @Transactional(readOnly = true)
     public SellerApplicationResponseDto getApplicationById(String applicationId) {
         SellerApplication application = sellerApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId", applicationId));
+                .or(() -> sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(applicationId))
+                .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId/sellerId", applicationId));
         return mapToDto(application);
     }
 
     @Override
     public SellerApplicationResponseDto approveApplication(String applicationId, SellerActionDto dto) {
         SellerApplication application = sellerApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId", applicationId));
+                .or(() -> sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(applicationId))
+                .orElseGet(() -> {
+                    User user = userRepository.findById(applicationId)
+                            .or(() -> userRepository.findByEmail(applicationId))
+                            .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId/sellerId", applicationId));
 
-        if (application.getStatus() == SellerApplication.Status.APPROVED) {
-            throw new BusinessValidationException("Seller application is already approved");
-        }
+                    return SellerApplication.builder()
+                            .id("app_" + java.util.UUID.randomUUID().toString().substring(0, 8))
+                            .userId(user.getId())
+                            .businessName(user.getName() + " Enterprise")
+                            .businessType("SUPPLIER")
+                            .status(SellerApplication.Status.PENDING)
+                            .build();
+                });
 
         application.setStatus(SellerApplication.Status.APPROVED);
         application.setVerifiedAt(LocalDateTime.now());
@@ -103,13 +113,14 @@ public class AdminSellerServiceImpl implements AdminSellerService {
         application.setRejectionReason(null);
         SellerApplication saved = sellerApplicationRepository.save(application);
 
-        // Update user role to SUPPLIER
+        // Update user role to SUPPLIER and status to ACTIVE
         userRepository.findById(application.getUserId()).ifPresent(u -> {
             u.setRole(User.Role.SUPPLIER);
+            u.setStatus(User.Status.ACTIVE);
             userRepository.save(u);
         });
 
-        auditLogService.logAction("admin", "ROLE_ADMIN", "APPROVE_SELLER_APPLICATION", "SELLER_APPLICATION", applicationId, "PENDING", "APPROVED", null, null);
+        auditLogService.logAction("admin", "ROLE_ADMIN", "APPROVE_SELLER_APPLICATION", "SELLER_APPLICATION", application.getId(), "PENDING", "APPROVED", null, null);
 
         return mapToDto(saved);
     }
@@ -117,11 +128,20 @@ public class AdminSellerServiceImpl implements AdminSellerService {
     @Override
     public SellerApplicationResponseDto rejectApplication(String applicationId, SellerActionDto dto) {
         SellerApplication application = sellerApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId", applicationId));
+                .or(() -> sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(applicationId))
+                .orElseGet(() -> {
+                    User user = userRepository.findById(applicationId)
+                            .or(() -> userRepository.findByEmail(applicationId))
+                            .orElseThrow(() -> new ResourceNotFoundException("SellerApplication", "applicationId/sellerId", applicationId));
 
-        if (application.getStatus() == SellerApplication.Status.APPROVED) {
-            throw new BusinessValidationException("Cannot reject an already approved application");
-        }
+                    return SellerApplication.builder()
+                            .id("app_" + java.util.UUID.randomUUID().toString().substring(0, 8))
+                            .userId(user.getId())
+                            .businessName(user.getName() + " Enterprise")
+                            .businessType("SUPPLIER")
+                            .status(SellerApplication.Status.PENDING)
+                            .build();
+                });
 
         application.setStatus(SellerApplication.Status.REJECTED);
         application.setRejectionReason(dto != null && StringUtils.hasText(dto.getReason()) ? dto.getReason().trim() : "Documents incomplete or invalid");
@@ -129,7 +149,7 @@ public class AdminSellerServiceImpl implements AdminSellerService {
         application.setVerifiedBy("admin");
         SellerApplication saved = sellerApplicationRepository.save(application);
 
-        auditLogService.logAction("admin", "ROLE_ADMIN", "REJECT_SELLER_APPLICATION", "SELLER_APPLICATION", applicationId, "PENDING", "REJECTED", null, null);
+        auditLogService.logAction("admin", "ROLE_ADMIN", "REJECT_SELLER_APPLICATION", "SELLER_APPLICATION", application.getId(), "PENDING", "REJECTED", null, null);
 
         return mapToDto(saved);
     }

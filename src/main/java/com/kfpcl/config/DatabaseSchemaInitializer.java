@@ -33,7 +33,8 @@ public class DatabaseSchemaInitializer implements ApplicationRunner {
             "ALTER TABLE brands MODIFY COLUMN logo_url LONGTEXT",
             "ALTER TABLE message_attachments MODIFY COLUMN file_url LONGTEXT",
             "ALTER TABLE products ADD COLUMN region_of_origin VARCHAR(150)",
-            "ALTER TABLE products ADD COLUMN country_of_origin VARCHAR(150)"
+            "ALTER TABLE products ADD COLUMN country_of_origin VARCHAR(150)",
+            "ALTER TABLE banners MODIFY COLUMN image_url LONGTEXT"
     );
 
     @Override

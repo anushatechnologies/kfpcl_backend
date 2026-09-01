@@ -38,7 +38,7 @@ public class AdminSellerController {
         return ResponseEntity.ok(ApiResponse.success(applications, "Seller applications retrieved successfully"));
     }
 
-    @GetMapping("/applications/{applicationId}")
+    @GetMapping({"/applications/{applicationId}", "/{applicationId}"})
     public ResponseEntity<ApiResponse<SellerApplicationResponseDto>> getApplication(
             @PathVariable String applicationId) {
 
@@ -46,7 +46,7 @@ public class AdminSellerController {
         return ResponseEntity.ok(ApiResponse.success(application, "Seller application details retrieved successfully"));
     }
 
-    @PostMapping("/applications/{applicationId}/approve")
+    @PostMapping({"/applications/{applicationId}/approve", "/{applicationId}/approve"})
     public ResponseEntity<ApiResponse<SellerApplicationResponseDto>> approveApplication(
             @PathVariable String applicationId,
             @RequestBody(required = false) SellerActionDto dto) {
@@ -55,7 +55,7 @@ public class AdminSellerController {
         return ResponseEntity.ok(ApiResponse.success(approved, "Seller application approved successfully"));
     }
 
-    @PostMapping("/applications/{applicationId}/reject")
+    @PostMapping({"/applications/{applicationId}/reject", "/{applicationId}/reject"})
     public ResponseEntity<ApiResponse<SellerApplicationResponseDto>> rejectApplication(
             @PathVariable String applicationId,
             @RequestBody(required = false) SellerActionDto dto) {
