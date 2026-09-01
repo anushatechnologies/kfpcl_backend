@@ -15,6 +15,9 @@ public class QuotationResponseDto {
 
     private String id;
     private String rfqId;
+    private String rfqTitle;
+    private String rfqProductName;
+    private Integer rfqQuantity;
     private String sellerId;
     private String sellerName;
     private Double unitPrice;

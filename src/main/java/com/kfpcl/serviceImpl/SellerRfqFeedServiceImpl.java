@@ -88,7 +88,30 @@ public class SellerRfqFeedServiceImpl implements SellerRfqFeedService {
                 .build();
 
         quotation = quotationRepository.save(quotation);
-        return mapQuotationToResponse(quotation);
+        return mapQuotationToResponse(quotation, rfq);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDto<QuotationResponseDto> getMyQuotes(String sellerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Quotation> quotes = quotationRepository.findBySellerId(sellerId, pageable);
+        
+        List<QuotationResponseDto> content = quotes.getContent().stream()
+                .map(q -> {
+                    Rfq rfq = rfqRepository.findById(q.getRfqId()).orElse(null);
+                    return mapQuotationToResponse(q, rfq);
+                })
+                .collect(Collectors.toList());
+                
+        return PageResponseDto.<QuotationResponseDto>builder()
+                .content(content)
+                .page(quotes.getNumber())
+                .size(quotes.getSize())
+                .totalElements(quotes.getTotalElements())
+                .totalPages(quotes.getTotalPages())
+                .isLast(quotes.isLast())
+                .build();
     }
     
     private RfqResponseDto mapRfqToResponse(Rfq rfq) {
@@ -112,10 +135,13 @@ public class SellerRfqFeedServiceImpl implements SellerRfqFeedService {
                 .build();
     }
     
-    private QuotationResponseDto mapQuotationToResponse(Quotation q) {
+    private QuotationResponseDto mapQuotationToResponse(Quotation q, Rfq rfq) {
         return QuotationResponseDto.builder()
                 .id(q.getId())
                 .rfqId(q.getRfqId())
+                .rfqTitle(rfq != null ? rfq.getTitle() : null)
+                .rfqProductName(rfq != null ? rfq.getProductName() : null)
+                .rfqQuantity(rfq != null ? rfq.getQuantity() : null)
                 .sellerId(q.getSellerId())
                 .sellerName(q.getSellerName())
                 .unitPrice(q.getUnitPrice())

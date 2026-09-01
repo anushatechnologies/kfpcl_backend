@@ -27,6 +27,17 @@ public class SellerRfqFeedController {
         return ResponseEntity.ok(ApiResponse.success(responses, "RFQ feed retrieved successfully"));
     }
 
+    @GetMapping("/my-quotes")
+    public ResponseEntity<ApiResponse<PageResponseDto<QuotationResponseDto>>> getMyQuotes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+        
+        String sellerId = (String) request.getAttribute("authenticatedUser");
+        PageResponseDto<QuotationResponseDto> responses = rfqFeedService.getMyQuotes(sellerId, page, size);
+        return ResponseEntity.ok(ApiResponse.success(responses, "My quotes retrieved successfully"));
+    }
+
     @PostMapping("/{rfqId}/quote")
     public ResponseEntity<ApiResponse<QuotationResponseDto>> submitQuote(
             @PathVariable String rfqId,

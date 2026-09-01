@@ -3,6 +3,7 @@ package com.kfpcl.controller;
 import com.kfpcl.dto.ApiResponse;
 import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.RfqResponseDto;
+import com.kfpcl.dto.RfqWithQuotesResponseDto;
 import com.kfpcl.dto.request.RfqCreateRequest;
 import com.kfpcl.dto.response.QuoteAcceptanceResponse;
 import com.kfpcl.service.BuyerRfqService;
@@ -37,6 +38,16 @@ public class BuyerRfqController {
         String buyerId = (String) request.getAttribute("authenticatedUser");
         PageResponseDto<RfqResponseDto> responses = buyerRfqService.getBuyerRfqs(buyerId, page, size);
         return ResponseEntity.ok(ApiResponse.success(responses, "RFQs retrieved successfully"));
+    }
+
+    @GetMapping("/{rfqId}")
+    public ResponseEntity<ApiResponse<RfqWithQuotesResponseDto>> getRfqWithQuotes(
+            @PathVariable String rfqId,
+            HttpServletRequest request) {
+        
+        String buyerId = (String) request.getAttribute("authenticatedUser");
+        RfqWithQuotesResponseDto response = buyerRfqService.getRfqWithQuotes(buyerId, rfqId);
+        return ResponseEntity.ok(ApiResponse.success(response, "RFQ details retrieved successfully"));
     }
 
     @PostMapping("/{rfqId}/quotes/{quoteId}/accept")

@@ -2,6 +2,8 @@ package com.kfpcl.serviceImpl;
 
 import com.kfpcl.dto.PageResponseDto;
 import com.kfpcl.dto.RfqResponseDto;
+import com.kfpcl.dto.QuotationResponseDto;
+import com.kfpcl.dto.RfqWithQuotesResponseDto;
 import com.kfpcl.dto.request.RfqCreateRequest;
 import com.kfpcl.dto.response.QuoteAcceptanceResponse;
 import com.kfpcl.entity.Product;
@@ -100,6 +102,27 @@ public class BuyerRfqServiceImpl implements BuyerRfqService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public RfqWithQuotesResponseDto getRfqWithQuotes(String buyerId, String rfqId) {
+        Rfq rfq = rfqRepository.findById(rfqId)
+                .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
+
+        if (!rfq.getBuyerId().equals(buyerId)) {
+            throw new IllegalArgumentException("Unauthorized to view this RFQ");
+        }
+
+        List<Quotation> quotes = quotationRepository.findByRfqId(rfqId);
+        List<QuotationResponseDto> quoteDtos = quotes.stream()
+                .map(this::mapQuoteToResponse)
+                .collect(Collectors.toList());
+
+        return RfqWithQuotesResponseDto.builder()
+                .rfq(mapToResponse(rfq))
+                .quotes(quoteDtos)
+                .build();
+    }
+
+    @Override
     @Transactional
     public QuoteAcceptanceResponse acceptQuote(String buyerId, String rfqId, String quoteId) {
         Rfq rfq = rfqRepository.findById(rfqId)
@@ -166,6 +189,28 @@ public class BuyerRfqServiceImpl implements BuyerRfqService {
                 .deadline(rfq.getDeadline())
                 .createdAt(rfq.getCreatedAt())
                 .updatedAt(rfq.getUpdatedAt())
+                .build();
+    }
+
+    private QuotationResponseDto mapQuoteToResponse(Quotation quote) {
+        return QuotationResponseDto.builder()
+                .id(quote.getId())
+                .rfqId(quote.getRfqId())
+                .sellerId(quote.getSellerId())
+                .sellerName(quote.getSellerName())
+                .unitPrice(quote.getUnitPrice())
+                .totalPrice(quote.getTotalPrice())
+                .validUntil(quote.getValidUntil())
+                .freight(quote.getFreight())
+                .deliveryDays(quote.getDeliveryDays())
+                .timeline(quote.getTimeline())
+                .paymentTerms(quote.getPaymentTerms())
+                .warranty(quote.getWarranty())
+                .notes(quote.getNotes())
+                .status(quote.getStatus().name())
+                .terms(quote.getTerms())
+                .createdAt(quote.getCreatedAt())
+                .updatedAt(quote.getUpdatedAt())
                 .build();
     }
 }
