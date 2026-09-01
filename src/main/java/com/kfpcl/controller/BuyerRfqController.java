@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/buyer/rfq")
+@RequestMapping({"/api/v1/buyer/rfq", "/api/v1/buyer/rfqs", "/api/v1/rfqs", "/api/v1/rfq", "/api/v1/buyers/rfq", "/api/v1/buyers/rfqs"})
 @RequiredArgsConstructor
 public class BuyerRfqController {
 
