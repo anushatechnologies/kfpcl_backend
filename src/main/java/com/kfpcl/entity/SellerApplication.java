@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_seller_app_user", columnList = "user_id"),
         @Index(name = "idx_seller_app_status", columnList = "status")
 })
+@Getter
+@Setter
 @Data
 @Builder
 @NoArgsConstructor

@@ -22,8 +22,13 @@ public class InventoryResponseDto {
     private Integer reservedQuantity;
     private Integer availableQuantity;
     private Integer reorderLevel;
+    private String warehouseLocation;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<InventoryLogDto> recentLogs;
+
+    public Integer getReservedStock() {
+        return reservedQuantity;
+    }
 }

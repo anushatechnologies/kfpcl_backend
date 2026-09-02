@@ -30,10 +30,10 @@ public class SellerProfile {
     @Column(name = "description", length = 2000)
     private String description;
 
-    @Column(name = "logo_url", columnDefinition = "LONGTEXT")
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
-    @Column(name = "banner_url", columnDefinition = "LONGTEXT")
+    @Column(name = "banner_url", columnDefinition = "TEXT")
     private String bannerUrl;
 
     @Column(name = "address", length = 500)

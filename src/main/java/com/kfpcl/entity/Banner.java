@@ -28,7 +28,7 @@ public class Banner {
     @Column(name = "subtitle", length = 500)
     private String subtitle;
 
-    @Column(name = "image_url", columnDefinition = "LONGTEXT")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(name = "link_url", length = 500)

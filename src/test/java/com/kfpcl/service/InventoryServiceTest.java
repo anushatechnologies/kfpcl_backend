@@ -119,4 +119,67 @@ class InventoryServiceTest {
         assertThrows(BusinessValidationException.class, () -> inventoryService.adjustStock("inv_1001", dto));
         verify(inventoryRepository, never()).save(any(Inventory.class));
     }
+
+    @Test
+    @DisplayName("Update Inventory Details - Full Success")
+    void testUpdateInventoryDetails_Success() {
+        com.kfpcl.dto.InventoryUpdateDetailsDto dto = com.kfpcl.dto.InventoryUpdateDetailsDto.builder()
+                .stockQuantity(120)
+                .reservedQuantity(15)
+                .reorderLevel(25)
+                .warehouseLocation("Warehouse B, Kolar")
+                .sku("AML-MILK-500-V2")
+                .reason("Full inventory detail update")
+                .build();
+
+        when(inventoryRepository.findById("inv_1001")).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.save(any(Inventory.class))).thenReturn(inventory);
+        when(productRepository.findById("prod_1001")).thenReturn(Optional.of(product));
+        when(inventoryLogRepository.findByInventoryIdOrderByCreatedAtDesc("inv_1001")).thenReturn(Collections.emptyList());
+
+        InventoryResponseDto response = inventoryService.updateInventoryDetails("inv_1001", dto);
+
+        assertNotNull(response);
+        assertEquals(120, inventory.getStockQuantity());
+        assertEquals(15, inventory.getReservedQuantity());
+        assertEquals(25, inventory.getReorderLevel());
+        assertEquals("Warehouse B, Kolar", inventory.getWarehouseLocation());
+        assertEquals("AML-MILK-500-V2", inventory.getSku());
+    }
+
+    @Test
+    @DisplayName("Delete Inventory - Success")
+    void testDeleteInventory_Success() {
+        when(inventoryRepository.findById("inv_1001")).thenReturn(Optional.of(inventory));
+        doNothing().when(inventoryLogRepository).deleteByInventoryId("inv_1001");
+        doNothing().when(inventoryRepository).delete(inventory);
+
+        inventoryService.deleteInventory("inv_1001");
+
+        verify(inventoryLogRepository, times(1)).deleteByInventoryId("inv_1001");
+        verify(inventoryRepository, times(1)).delete(inventory);
+    }
+
+    @Test
+    @DisplayName("Create Inventory - Success")
+    void testCreateInventory_Success() {
+        com.kfpcl.dto.InventoryCreateDto dto = com.kfpcl.dto.InventoryCreateDto.builder()
+                .productId("prod_2002")
+                .sku("AML-MILK-1000")
+                .stockQuantity(80)
+                .reservedQuantity(10)
+                .reorderLevel(15)
+                .warehouseLocation("Warehouse Main, Bangalore")
+                .build();
+
+        when(inventoryRepository.findByProductId("prod_2002")).thenReturn(Optional.empty());
+        when(inventoryRepository.save(any(Inventory.class))).thenReturn(inventory);
+        when(inventoryRepository.findById(anyString())).thenReturn(Optional.of(inventory));
+
+        InventoryResponseDto response = inventoryService.createInventory(dto);
+
+        assertNotNull(response);
+        verify(inventoryRepository, times(1)).save(any(Inventory.class));
+        verify(inventoryLogRepository, times(1)).save(any(InventoryLog.class));
+    }
 }

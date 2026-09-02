@@ -22,7 +22,7 @@ public class Category {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "image_url", columnDefinition = "LONGTEXT")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(name = "description", length = 1000)

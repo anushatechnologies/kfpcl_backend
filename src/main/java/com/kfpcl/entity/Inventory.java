@@ -45,6 +45,9 @@ public class Inventory {
     @Builder.Default
     private Status status = Status.IN_STOCK;
 
+    @Column(name = "warehouse_location", length = 200)
+    private String warehouseLocation;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

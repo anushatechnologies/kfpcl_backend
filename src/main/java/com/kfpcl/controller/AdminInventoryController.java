@@ -14,6 +14,15 @@ public class AdminInventoryController {
 
     private final InventoryService inventoryService;
 
+    @PostMapping
+    public ResponseEntity<ApiResponse<InventoryResponseDto>> createInventory(
+            @Valid @RequestBody InventoryCreateDto dto) {
+
+        InventoryResponseDto created = inventoryService.createInventory(dto);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(ApiResponse.success(created, "Inventory item created successfully"));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDto<InventoryResponseDto>>> listInventory(
             @RequestParam(required = false) String status,
@@ -52,6 +61,24 @@ public class AdminInventoryController {
         return ResponseEntity.ok(ApiResponse.success(updated, "Inventory stock quantity updated successfully"));
     }
 
+    @PutMapping("/{inventoryId}")
+    public ResponseEntity<ApiResponse<InventoryResponseDto>> updateInventoryDetailsPut(
+            @PathVariable String inventoryId,
+            @Valid @RequestBody InventoryUpdateDetailsDto dto) {
+
+        InventoryResponseDto updated = inventoryService.updateInventoryDetails(inventoryId, dto);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Inventory details updated successfully"));
+    }
+
+    @PatchMapping("/{inventoryId}")
+    public ResponseEntity<ApiResponse<InventoryResponseDto>> updateInventoryDetailsPatch(
+            @PathVariable String inventoryId,
+            @Valid @RequestBody InventoryUpdateDetailsDto dto) {
+
+        InventoryResponseDto updated = inventoryService.updateInventoryDetails(inventoryId, dto);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Inventory details updated successfully"));
+    }
+
     @PostMapping("/{inventoryId}/adjustment")
     public ResponseEntity<ApiResponse<InventoryResponseDto>> adjustStock(
             @PathVariable String inventoryId,
@@ -59,5 +86,13 @@ public class AdminInventoryController {
 
         InventoryResponseDto adjusted = inventoryService.adjustStock(inventoryId, dto);
         return ResponseEntity.ok(ApiResponse.success(adjusted, "Inventory stock adjusted successfully"));
+    }
+
+    @DeleteMapping("/{inventoryId}")
+    public ResponseEntity<ApiResponse<Void>> deleteInventory(
+            @PathVariable String inventoryId) {
+
+        inventoryService.deleteInventory(inventoryId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Inventory item deleted successfully"));
     }
 }

@@ -28,7 +28,7 @@ public class Brand {
     @Column(name = "slug", length = 150)
     private String slug;
 
-    @Column(name = "logo_url", columnDefinition = "LONGTEXT")
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
     @Column(name = "description", length = 1000)
