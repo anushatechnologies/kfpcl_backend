@@ -1,4 +1,5 @@
 package com.kfpcl.dto.request;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
